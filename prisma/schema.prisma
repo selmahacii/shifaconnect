@@ -1,0 +1,377 @@
+// Shifa-Connect Database Schema
+// Medical Practice Management SaaS for Algerian Private Doctors
+// Compatible with SQLite (dev) and PostgreSQL/Supabase (production)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER & AUTHENTICATION
+// ============================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String
+  phone         String?
+  avatar        String?
+  role          UserRole  @default(DOCTOR)
+  isActive      Boolean   @default(true)
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  doctor        Doctor?
+  sessions      Session[]
+  auditLogs     AuditLog[]
+
+  @@map("users")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  token        String   @unique
+  expiresAt    DateTime
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+enum UserRole {
+  DOCTOR
+  ADMIN
+  ASSISTANT
+  @@map("user_roles")
+}
+
+// ============================================
+// DOCTOR PROFILE
+// ============================================
+
+model Doctor {
+  id                    String          @id @default(cuid())
+  userId                String          @unique
+  professionalTitle     String?         // Dr., Pr., etc.
+  specialization        String?         // General Practitioner, etc.
+  licenseNumber         String?         // Numéro d'inscription à l'Ordre
+  wilaya                String?         // Province (48 wilayas of Algeria)
+  address               String?
+  city                  String?
+  postalCode            String?
+  clinicPhone           String?
+  clinicName            String?         // Name of the practice
+  consultationFee      Int             @default(2000) // In DZD (centimes)
+  workingHours          String?         // JSON string of working schedule
+  stampImage            String?         // Base64 encoded stamp image for PDFs
+  signatureImage        String?         // Base64 encoded signature image for PDFs
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  // Relations
+  user                  User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  patients              Patient[]
+  consultations         Consultation[]
+  appointments          Appointment[]
+  prescriptions         Prescription[]
+  medicalDocuments      MedicalDocument[]
+
+  @@map("doctors")
+}
+
+// ============================================
+// PATIENT MANAGEMENT
+// ============================================
+
+model Patient {
+  id                    String            @id @default(cuid())
+  doctorId              String
+  fileNumber            String            @unique // Numéro de dossier
+  firstName             String
+  lastName              String
+  firstNameAr           String?           // Arabic first name
+  lastNameAr            String?           // Arabic last name
+  dateOfBirth           String            // DD/MM/YYYY format
+  gender                Gender
+  nin                   String?           // Numéro d'Identification Nationale (18 chiffres)
+  chifaNumber           String?           // Numéro carte Chifa
+  phone                 String?
+  phoneSecondary        String?
+  email                 String?
+  address               String?
+  city                  String?
+  wilaya                String?           // Province
+  bloodType             BloodType?
+  allergies             String?           // Comma-separated or JSON
+  chronicDiseases       String?           // Comma-separated or JSON
+  currentMedications    String?           // Comma-separated or JSON
+  emergencyContact      String?           // Name and phone
+  notes                 String?
+  isActive              Boolean           @default(true)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  // Relations
+  doctor                Doctor            @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  consultations         Consultation[]
+  appointments          Appointment[]
+  prescriptions         Prescription[]
+  medicalDocuments      MedicalDocument[]
+
+  @@index([doctorId])
+  @@index([lastName])
+  @@index([phone])
+  @@map("patients")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  @@map("genders")
+}
+
+enum BloodType {
+  A_POSITIVE
+  A_NEGATIVE
+  B_POSITIVE
+  B_NEGATIVE
+  AB_POSITIVE
+  AB_NEGATIVE
+  O_POSITIVE
+  O_NEGATIVE
+  @@map("blood_types")
+}
+
+// ============================================
+// CONSULTATIONS
+// ============================================
+
+model Consultation {
+  id                    String            @id @default(cuid())
+  doctorId              String
+  patientId             String
+  consultationDate      String            // DD/MM/YYYY format
+  consultationTime      String?           // HH:mm format
+  chiefComplaint        String            // Motif de consultation (FR)
+  chiefComplaintAr      String?           // Arabic
+  presentIllness        String?           // Histoire de la maladie
+  presentIllnessAr      String?           // Arabic
+  examinationNotes      String?           // Notes d'examen
+  examinationNotesAr    String?           // Arabic
+  diagnosis             String?           // Diagnostic
+  diagnosisAr           String?           // Arabic
+  icdCode               String?           // ICD-10 code for diagnosis
+  treatmentPlan         String?           // Plan de traitement
+  treatmentPlanAr       String?           // Arabic
+  followUpDate          String?           // DD/MM/YYYY format
+  followUpNotes         String?
+  vitals                String?           // JSON: {bp, temp, pulse, weight, height}
+  fee                   Int?              // Consultation fee in DZD centimes
+  paid                  Boolean           @default(false)
+  paymentMethod         PaymentMethod?
+  notes                 String?
+  status                ConsultationStatus @default(COMPLETED)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  // Relations
+  doctor                Doctor            @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  patient               Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  prescriptions         Prescription[]
+  medicalDocuments      MedicalDocument[]
+
+  @@index([doctorId])
+  @@index([patientId])
+  @@index([consultationDate])
+  @@map("consultations")
+}
+
+enum ConsultationStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+  @@map("consultation_statuses")
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  CHEQUE
+  INSURANCE
+  FREE
+  @@map("payment_methods")
+}
+
+// ============================================
+// PRESCRIPTIONS
+// ============================================
+
+model Prescription {
+  id                    String            @id @default(cuid())
+  doctorId              String
+  patientId             String
+  consultationId        String?
+  prescriptionNumber    String?           @unique // Auto-generated prescription number
+  prescriptionDate      String            // DD/MM/YYYY format
+  diagnosis             String?           // Diagnosis for this prescription
+  generalInstructions   String?           // Instructions générales
+  notes                 String?
+  isValid               Boolean           @default(true)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  // Relations
+  doctor                Doctor            @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  patient               Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  consultation          Consultation?     @relation(fields: [consultationId], references: [id], onDelete: SetNull)
+  items                 PrescriptionItem[]
+
+  @@index([doctorId])
+  @@index([patientId])
+  @@index([prescriptionDate])
+  @@map("prescriptions")
+}
+
+model PrescriptionItem {
+  id                    String            @id @default(cuid())
+  prescriptionId        String
+  medicationName        String            // Medication name
+  medicationNameAr      String?           // Arabic name
+  dosage                String            // e.g., "500mg"
+  form                  String?           // Forme galénique (Comprimé, Gélule, Sirop, etc.)
+  frequency             String            // e.g., "3 fois par jour"
+  frequencyAr           String?           // Arabic
+  duration              String            // e.g., "7 jours"
+  durationAr            String?           // Arabic
+  quantity              String?           // e.g., "1 boîte", "2 flacons" (was Int, changed to String)
+  instructions          String?           // Special instructions
+  instructionsAr        String?           // Arabic
+  renewal               Boolean           @default(false) // Renouvellement autorisé
+  order                 Int               @default(0) // Display order
+  createdAt             DateTime          @default(now())
+
+  prescription          Prescription      @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+
+  @@index([prescriptionId])
+  @@map("prescription_items")
+}
+
+// ============================================
+// APPOINTMENTS / AGENDA
+// ============================================
+
+model Appointment {
+  id                    String              @id @default(cuid())
+  doctorId              String
+  patientId             String?
+  appointmentDate       String              // DD/MM/YYYY format
+  appointmentTime       String              // HH:mm format
+  duration              Int                 @default(15) // Duration in minutes
+  reason                String?             // Reason for visit
+  reasonAr              String?             // Arabic
+  notes                 String?
+  status                AppointmentStatus   @default(SCHEDULED)
+  reminderSent          Boolean             @default(false)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+
+  // Relations
+  doctor                Doctor              @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  patient               Patient?            @relation(fields: [patientId], references: [id], onDelete: SetNull)
+
+  @@index([doctorId])
+  @@index([patientId])
+  @@index([appointmentDate])
+  @@map("appointments")
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+  @@map("appointment_statuses")
+}
+
+// ============================================
+// MEDICAL DOCUMENTS
+// ============================================
+
+model MedicalDocument {
+  id                    String            @id @default(cuid())
+  doctorId              String
+  patientId             String
+  consultationId        String?
+  documentType          DocumentType
+  title                 String
+  titleAr               String?
+  description           String?
+  descriptionAr         String?
+  filePath              String            // Path to stored file
+  fileSize              Int?              // File size in bytes
+  mimeType              String?
+  documentDate          String?           // DD/MM/YYYY - date on the document
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  // Relations
+  doctor                Doctor            @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  patient               Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  consultation          Consultation?     @relation(fields: [consultationId], references: [id], onDelete: SetNull)
+
+  @@index([doctorId])
+  @@index([patientId])
+  @@map("medical_documents")
+}
+
+enum DocumentType {
+  LAB_RESULT
+  XRAY
+  MRI
+  CT_SCAN
+  ULTRASOUND
+  REPORT
+  REFERRAL
+  CERTIFICATE
+  OTHER
+  @@map("document_types")
+}
+
+// ============================================
+// AUDIT LOG
+// ============================================
+
+model AuditLog {
+  id                    String            @id @default(cuid())
+  userId                String?
+  action                String
+  entityType            String
+  entityId              String?
+  oldValue              String?           // JSON
+  newValue              String?           // JSON
+  ipAddress             String?
+  userAgent             String?
+  createdAt             DateTime          @default(now())
+
+  user                  User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@map("audit_logs")
+}

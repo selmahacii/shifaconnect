@@ -1,0 +1,288 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.625rem;
+  /* Shifa-Connect Design System */
+  --background: #F8F9FA;
+  --foreground: #1C2833;
+  --card: #FFFFFF;
+  --card-foreground: #1C2833;
+  --popover: #FFFFFF;
+  --popover-foreground: #1C2833;
+  --primary: #1B4F72;
+  --primary-foreground: #FFFFFF;
+  --secondary: #148F77;
+  --secondary-foreground: #FFFFFF;
+  --muted: #F8F9FA;
+  --muted-foreground: #7F8C8D;
+  --accent: #F39C12;
+  --accent-foreground: #1C2833;
+  --destructive: #E74C3C;
+  --destructive-foreground: #FFFFFF;
+  --success: #27AE60;
+  --success-foreground: #FFFFFF;
+  --border: #E5E7EB;
+  --input: #E5E7EB;
+  --ring: #1B4F72;
+  --chart-1: #1B4F72;
+  --chart-2: #148F77;
+  --chart-3: #F39C12;
+  --chart-4: #27AE60;
+  --chart-5: #E74C3C;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #1C2833;
+  --sidebar-primary: #1B4F72;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #F8F9FA;
+  --sidebar-accent-foreground: #1B4F72;
+  --sidebar-border: #E5E7EB;
+  --sidebar-ring: #1B4F72;
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Print Styles for Consultations and Prescriptions */
+@media print {
+  /* Hide non-essential elements */
+  body {
+    background: white !important;
+    font-size: 12pt;
+    color: black !important;
+  }
+
+  /* Hide navigation, buttons, and interactive elements */
+  nav,
+  header,
+  footer,
+  .no-print,
+  button,
+  .btn,
+  [role="dialog"],
+  .dialog,
+  .modal,
+  aside,
+  .sidebar,
+  .fixed,
+  .sticky {
+    display: none !important;
+  }
+
+  /* Ensure content takes full width */
+  main,
+  .main-content,
+  .print-content {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Prescription and consultation specific styles */
+  .prescription-print,
+  .consultation-print {
+    padding: 20mm !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Header for printed documents */
+  .print-header {
+    border-bottom: 2px solid #1B4F72 !important;
+    padding-bottom: 10px !important;
+    margin-bottom: 20px !important;
+  }
+
+  /* Doctor info */
+  .print-doctor-info {
+    text-align: right !important;
+    font-size: 11pt !important;
+  }
+
+  /* Patient info box */
+  .print-patient-info {
+    border: 1px solid #333 !important;
+    padding: 10px !important;
+    margin: 15px 0 !important;
+  }
+
+  /* Prescription items table */
+  .print-prescription-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  .print-prescription-table th,
+  .print-prescription-table td {
+    border: 1px solid #333 !important;
+    padding: 8px !important;
+    text-align: left !important;
+  }
+
+  /* Signature area */
+  .print-signature {
+    margin-top: 40px !important;
+    text-align: right !important;
+  }
+
+  /* Ensure images are printed */
+  img {
+    max-width: 100% !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Avoid page breaks inside important sections */
+  .avoid-break {
+    page-break-inside: avoid !important;
+  }
+
+  /* Force page break */
+  .page-break {
+    page-break-before: always !important;
+  }
+
+  /* RTL support for Arabic text */
+  [dir="rtl"] {
+    direction: rtl !important;
+  }
+
+  /* Arabic text styling */
+  .arabic-text {
+    font-family: 'Noto Sans Arabic', 'Plus Jakarta Sans', sans-serif !important;
+    direction: rtl !important;
+    text-align: right !important;
+  }
+
+  /* Footer for printed documents */
+  .print-footer {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    font-size: 9pt !important;
+    text-align: center !important;
+    border-top: 1px solid #ccc !important;
+    padding: 5px !important;
+  }
+
+  /* Ensure background colors are printed */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
+/* Custom scrollbar styling */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* RTL support for Arabic content */
+[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}
+
+.arabic-text {
+  font-family: 'Noto Sans Arabic', 'Plus Jakarta Sans', sans-serif;
+  direction: rtl;
+  text-align: right;
+}
