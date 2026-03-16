@@ -75,17 +75,10 @@ const emailSchema = z
 // ENUM SCHEMAS
 // ============================================
 
-export const GenderSchema = z.enum(['MALE', 'FEMALE']);
+export const GenderSchema = z.enum(['M', 'F']);
 
 export const BloodTypeSchema = z.enum([
-  'A_POSITIVE',
-  'A_NEGATIVE',
-  'B_POSITIVE',
-  'B_NEGATIVE',
-  'AB_POSITIVE',
-  'AB_NEGATIVE',
-  'O_POSITIVE',
-  'O_NEGATIVE',
+  'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'
 ]);
 
 export const ConsultationStatusSchema = z.enum([
@@ -120,15 +113,16 @@ export const UserRoleSchema = z.enum(['DOCTOR', 'ADMIN', 'ASSISTANT']);
 // ============================================
 
 /**
- * Validates NIN (National Identification Number) - 18 digits
+ * Validates NIN (National Identification Number) - 15 digits
  */
-const ninRegex = /^\d{18}$/;
+const ninRegex = /^\d{15}$/;
 const ninSchema = z
   .string()
   .optional()
+  .or(z.literal(''))
   .refine(
     (val) => !val || ninRegex.test(val),
-    'Le numéro NIN doit contenir exactement 18 chiffres'
+    'Le numéro NIN doit contenir exactement 15 chiffres'
   );
 
 /**
@@ -204,32 +198,18 @@ export type PatientSchemaType = z.infer<typeof PatientSchema>;
 // PATIENT CREATE/UPDATE SCHEMAS
 // ============================================
 
-/**
- * Schema for creating a new patient
- * All required fields are validated
- */
 export const PatientCreateSchema = z.object({
   // Step 1 - Identité
   firstName: z
     .string()
     .min(1, 'Le prénom est requis')
-    .min(2, 'Le prénom doit contenir au moins 2 caractères')
-    .max(100, 'Le prénom ne peut pas dépasser 100 caractères'),
+    .min(2, 'Le prénom doit contenir au moins 2 caractères'),
   lastName: z
     .string()
     .min(1, 'Le nom est requis')
-    .min(2, 'Le nom doit contenir au moins 2 caractères')
-    .max(100, 'Le nom ne peut pas dépasser 100 caractères'),
-  firstNameAr: z
-    .string()
-    .max(100, 'Le prénom en arabe ne peut pas dépasser 100 caractères')
-    .optional()
-    .or(z.literal('')),
-  lastNameAr: z
-    .string()
-    .max(100, 'Le nom en arabe ne peut pas dépasser 100 caractères')
-    .optional()
-    .or(z.literal('')),
+    .min(2, 'Le nom doit contenir au moins 2 caractères'),
+  firstNameAr: z.string().optional().or(z.literal('')),
+  lastNameAr: z.string().optional().or(z.literal('')),
   dateOfBirth: dateSchema,
   gender: GenderSchema,
   nin: ninSchema,
@@ -237,63 +217,19 @@ export const PatientCreateSchema = z.object({
 
   // Step 2 - Contact
   phone: algerianPhoneSchema,
-  phoneSecondary: algerianPhoneSchema,
-  email: z
-    .string()
-    .email('Veuillez entrer une adresse email valide')
-    .optional()
-    .or(z.literal('')),
-  address: z
-    .string()
-    .max(500, 'L\'adresse ne peut pas dépasser 500 caractères')
-    .optional()
-    .or(z.literal('')),
-  city: z
-    .string()
-    .max(100, 'La ville ne peut pas dépasser 100 caractères')
-    .optional()
-    .or(z.literal('')),
-  wilaya: z
-    .string()
-    .max(100, 'La wilaya ne peut pas dépasser 100 caractères')
-    .optional()
-    .or(z.literal('')),
+  address: z.string().optional().or(z.literal('')),
+  wilaya: z.string().min(1, 'La wilaya est requise'),
 
   // Step 3 - Antécédents médicaux
-  bloodType: BloodTypeSchema.optional(),
-  allergies: z
-    .string()
-    .max(1000, 'Les allergies ne peuvent pas dépasser 1000 caractères')
-    .optional()
-    .or(z.literal('')),
-  chronicDiseases: z
-    .string()
-    .max(1000, 'Les maladies chroniques ne peuvent pas dépasser 1000 caractères')
-    .optional()
-    .or(z.literal('')),
-  currentMedications: z
-    .string()
-    .max(1000, 'Les médicaments en cours ne peuvent pas dépasser 1000 caractères')
-    .optional()
-    .or(z.literal('')),
-  emergencyContact: z
-    .string()
-    .max(200, 'Le contact d\'urgence ne peut pas dépasser 200 caractères')
-    .optional()
-    .or(z.literal('')),
-  notes: z
-    .string()
-    .max(2000, 'Les notes ne peuvent pas dépasser 2000 caractères')
-    .optional()
-    .or(z.literal('')),
+  bloodGroup: BloodTypeSchema.optional().or(z.literal('')),
+  allergies: z.array(z.string()).default([]),
+  chronicConditions: z.array(z.string()).default([]),
+  currentMedications: z.array(z.string()).default([]),
+  notes: z.string().optional().or(z.literal('')),
 });
 
 export type PatientCreateSchemaType = z.infer<typeof PatientCreateSchema>;
 
-/**
- * Schema for updating an existing patient
- * All fields are optional except validation rules apply if provided
- */
 export const PatientUpdateSchema = PatientCreateSchema.partial();
 
 export type PatientUpdateSchemaType = z.infer<typeof PatientUpdateSchema>;
