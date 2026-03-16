@@ -23,9 +23,10 @@ export default async function PatientsPage() {
   if (!doctor) {
     redirect('/login')
   }
+  const doctorId = (doctor as any).id
 
   // Fetch patients with their last consultation date
-  const { data: patientsData, error } = await supabase
+  const { data: patientsData, error } = (await supabase
     .from('patients')
     .select(`
       *,
@@ -33,8 +34,8 @@ export default async function PatientsPage() {
         consultation_date
       )
     `)
-    .eq('doctor_id', doctor.id)
-    .order('last_name', { ascending: true })
+    .eq('doctor_id', doctorId)
+    .order('last_name', { ascending: true })) as any
 
   if (error) {
     console.error('Error fetching patients:', error)

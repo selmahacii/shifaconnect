@@ -88,18 +88,17 @@ export function PatientForm() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Non authentifié')
 
-      const { data: doctor } = await supabase
+      const { data: doctor } = (await supabase
         .from('doctors')
         .select('id')
         .eq('auth_user_id', user.id)
-        .single()
+        .single()) as any
 
       if (!doctor) throw new Error('Profil docteur non trouvé')
 
-      const { data: patient, error } = await supabase
-        .from('patients')
+      const { data: patient, error } = (await (supabase.from('patients') as any)
         .insert({
-          doctor_id: doctor.id,
+          doctor_id: (doctor as any).id,
           first_name: data.firstName,
           last_name: data.lastName,
           first_name_ar: data.firstNameAr || null,
@@ -118,7 +117,7 @@ export function PatientForm() {
           notes: data.notes || null,
         })
         .select()
-        .single()
+        .single()) as any
 
       if (error) throw error
 

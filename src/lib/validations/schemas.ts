@@ -222,9 +222,9 @@ export const PatientCreateSchema = z.object({
 
   // Step 3 - Antécédents médicaux
   bloodGroup: BloodTypeSchema.optional().or(z.literal('')),
-  allergies: z.array(z.string()).default([]),
-  chronicConditions: z.array(z.string()).default([]),
-  currentMedications: z.array(z.string()).default([]),
+  allergies: z.array(z.string()),
+  chronicConditions: z.array(z.string()),
+  currentMedications: z.array(z.string()),
   notes: z.string().optional().or(z.literal('')),
 });
 

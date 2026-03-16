@@ -13,7 +13,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { PatientDetailTabs } from '@/components/patients/PatientDetailTabs'
+import { PatientDetailTabs } from '../../../../components/patients/PatientDetailTabs'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
@@ -28,7 +28,7 @@ export default async function PatientDetailPage({ params }: { params: { id: stri
   if (!user) redirect('/login')
 
   // Fetch patient with consultations, prescriptions, and appointments
-  const { data: patient, error } = await supabase
+  const { data: patient, error } = (await supabase
     .from('patients')
     .select(`
       *,
@@ -37,7 +37,7 @@ export default async function PatientDetailPage({ params }: { params: { id: stri
       appointments (*)
     `)
     .eq('id', id)
-    .single()
+    .single()) as any
 
   if (error || !patient) {
     notFound()

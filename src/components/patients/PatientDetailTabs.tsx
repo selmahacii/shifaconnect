@@ -12,7 +12,8 @@ import {
   Pill,
   Download,
   Eye,
-  Plus
+  Plus,
+  Stethoscope
 } from 'lucide-react'
 import { 
   Tabs, 
