@@ -178,7 +178,7 @@ bun run db:studio
 bun run dev
 ```
 
-L'application sera disponible sur [http://localhost:3000](http://localhost:3000)
+L'application sera disponible on [http://localhost:3000](http://localhost:3000)
 
 ---
 
@@ -286,33 +286,17 @@ vercel --prod
 ```
 shifa-connect/
 ├── prisma/
-│   └── schema.prisma        # Schéma de la base de données
 ├── public/
-│   └── logo.svg             # Logo de l'application
 ├── src/
 │   ├── app/
-│   │   ├── (auth)/          # Pages d'authentification
-│   │   ├── (dashboard)/     # Pages principales (protégées)
-│   │   ├── api/             # Routes API
-│   │   └── layout.tsx       # Layout racine
 │   ├── components/
-│   │   ├── ui/              # Composants shadcn/ui
-│   │   ├── dashboard/       # Composants du tableau de bord
-│   │   ├── patients/        # Composants patients
-│   │   ├── consultations/   # Composants consultations
-│   │   ├── prescriptions/   # Composants ordonnances
-│   │   ├── agenda/          # Composants agenda
-│   │   └── settings/        # Composants paramètres
-│   ├── hooks/               # Hooks React personnalisés
+│   ├── hooks/
 │   ├── lib/
-│   │   ├── db.ts            # Client Prisma
-│   │   ├── utils/           # Utilitaires
-│   │   └── validations/     # Schémas Zod
-│   └── types/               # Types TypeScript
-├── .env.local.example       # Variables d'environnement exemple
-├── vercel.json              # Configuration Vercel
-├── package.json             # Dépendances
-└── README.md                # Documentation
+│   └── types/
+├── .env.local.example
+├── vercel.json
+├── package.json
+└── README.md
 ```
 
 ---
