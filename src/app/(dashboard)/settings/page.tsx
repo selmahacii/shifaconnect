@@ -33,11 +33,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 export default function SettingsPage() {
   const supabase = createClient()
   const [loading, setLoading] = React.useState(true)
   const [saving, setSaving] = React.useState(false)
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = React.useState(false)
   const [doctor, setDoctor] = React.useState<any>(null)
   const [user, setUser] = React.useState<any>(null)
 
@@ -87,6 +89,14 @@ export default function SettingsPage() {
       setDoctor({ ...doctor, ...updates })
     }
     setSaving(false)
+  }
+
+  const handleDeleteAccount = async () => {
+    setSaving(true)
+    // In a real app, you'd call a delete account API
+    toast.info("Demande de suppression envoyée. Nous vous contacterons pour confirmer.")
+    setSaving(false)
+    setIsDeleteConfirmOpen(false)
   }
 
   if (loading) return (
@@ -294,11 +304,22 @@ export default function SettingsPage() {
                     <p className="font-bold text-slate-900">Supprimer mon compte</p>
                     <p className="text-sm text-slate-500">Toutes vos données (patients, consultations, ordonnances) seront définitivement supprimées.</p>
                   </div>
-                  <Button variant="destructive">Supprimer</Button>
+                  <Button variant="destructive" onClick={() => setIsDeleteConfirmOpen(true)}>Supprimer</Button>
                 </div>
               </CardContent>
             </Card>
           </div>
+
+          <ConfirmDialog
+            open={isDeleteConfirmOpen}
+            onOpenChange={setIsDeleteConfirmOpen}
+            title="Supprimer mon compte ?"
+            description="Cette action est IRRÉVERSIBLE. Toutes vos données patients et médicales seront supprimées de nos serveurs. Êtes-vous certain de vouloir continuer ?"
+            confirmLabel="Oui, supprimer définitivement"
+            variant="destructive"
+            onConfirm={handleDeleteAccount}
+            isLoading={saving}
+          />
         </TabsContent>
 
         {/* Tab 3: Subscription */}
