@@ -1,801 +1,555 @@
-'use client';
+'use client'
 
-import * as React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import * as React from 'react'
+import { useRouter } from 'next/navigation'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
 import { 
+  Check, 
+  ChevronRight, 
+  ChevronLeft, 
   User, 
-  Phone, 
-  MapPin, 
-  Heart, 
-  AlertTriangle, 
-  Pill,
-  ChevronLeft,
-  ChevronRight,
-  Check,
-  Calendar,
-  CreditCard,
-  FileText,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+  Contact, 
+  Activity, 
+  X, 
+  Plus,
+  Loader2
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Card, CardContent } from '@/components/ui/card'
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select'
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { cn } from '@/lib/utils';
-import { WILAYAS, BLOOD_TYPES } from '@/lib/utils/constants';
-import { 
-  PatientCreateSchema, 
-  type PatientCreateSchemaType,
-  formatDateToDDMMYYYY,
-} from '@/lib/validations/schemas';
+} from '@/components/ui/form'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { Badge } from '@/components/ui/badge'
+import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
+import { PatientCreateSchema, PatientCreateSchemaType } from '@/lib/validations/schemas'
+import { WILAYAS } from '@/lib/constants'
+import { createClient } from '@/lib/supabase/client'
 
-// Common chronic diseases presets
-const CHRONIC_DISEASES_PRESETS = [
-  'Diabète type 2',
-  'Hypertension artérielle (HTA)',
-  'Asthme',
-  'Maladie cardiaque',
-  'Insuffisance rénale',
-  'Thyroïde',
-  'Épilepsie',
-  'Cancer',
-];
-
-// Step configuration
 const STEPS = [
-  { id: 1, title: 'Identité', icon: User, description: 'Informations personnelles' },
-  { id: 2, title: 'Contact', icon: Phone, description: 'Coordonnées' },
-  { id: 3, title: 'Antécédents', icon: Heart, description: 'Dossier médical' },
-];
+  { id: 1, title: 'Identité', icon: User },
+  { id: 2, title: 'Contact', icon: Contact },
+  { id: 3, title: 'Antécédents', icon: Activity },
+]
 
-interface PatientFormProps {
-  onSubmit: (data: PatientCreateSchemaType) => Promise<void>;
-  initialData?: Partial<PatientCreateSchemaType>;
-  isEditing?: boolean;
-}
+const CHRONIC_PRESETS = [
+  'Diabète type 1', 'Diabète type 2', 'HTA', 'Asthme', 'Cardiopathie', 
+  'Hyperthyroïdie', 'Hypothyroïdie', 'Insuffisance rénale'
+]
 
-// Tag Input Component
-interface TagInputProps {
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  suggestions?: string[];
-  disabled?: boolean;
-}
-
-function TagInput({ value, onChange, placeholder, suggestions = [], disabled }: TagInputProps) {
-  const [inputValue, setInputValue] = React.useState('');
-  const [showSuggestions, setShowSuggestions] = React.useState(false);
-  const inputRef = React.useRef<HTMLInputElement>(null);
-
-  const tags = value ? value.split(',').map(t => t.trim()).filter(Boolean) : [];
-
-  const addTag = (tag: string) => {
-    const trimmedTag = tag.trim();
-    if (trimmedTag && !tags.includes(trimmedTag)) {
-      const newTags = [...tags, trimmedTag];
-      onChange(newTags.join(', '));
-    }
-    setInputValue('');
-    setShowSuggestions(false);
-  };
-
-  const removeTag = (tagToRemove: string) => {
-    const newTags = tags.filter(t => t !== tagToRemove);
-    onChange(newTags.join(', '));
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault();
-      addTag(inputValue);
-    } else if (e.key === 'Backspace' && !inputValue && tags.length > 0) {
-      removeTag(tags[tags.length - 1]);
-    }
-  };
-
-  const filteredSuggestions = suggestions.filter(
-    s => s.toLowerCase().includes(inputValue.toLowerCase()) && !tags.includes(s)
-  );
-
-  return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap gap-2 min-h-[40px] p-2 border rounded-md bg-background">
-        {tags.map((tag, index) => (
-          <Badge
-            key={index}
-            variant="secondary"
-            className="flex items-center gap-1 px-2 py-1"
-          >
-            {tag}
-            <button
-              type="button"
-              onClick={() => removeTag(tag)}
-              className="ml-1 hover:text-destructive"
-              disabled={disabled}
-            >
-              ×
-            </button>
-          </Badge>
-        ))}
-        <input
-          ref={inputRef}
-          type="text"
-          value={inputValue}
-          onChange={(e) => {
-            setInputValue(e.target.value);
-            setShowSuggestions(e.target.value.length > 0);
-          }}
-          onKeyDown={handleKeyDown}
-          onFocus={() => setShowSuggestions(inputValue.length > 0)}
-          onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-          placeholder={tags.length === 0 ? placeholder : ''}
-          className="flex-1 min-w-[100px] outline-none text-sm bg-transparent"
-          disabled={disabled}
-        />
-      </div>
-      {showSuggestions && filteredSuggestions.length > 0 && (
-        <div className="border rounded-md bg-popover shadow-md max-h-40 overflow-y-auto">
-          {filteredSuggestions.map((suggestion, index) => (
-            <button
-              key={index}
-              type="button"
-              onClick={() => addTag(suggestion)}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-muted"
-            >
-              {suggestion}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-export function PatientForm({ onSubmit, initialData, isEditing = false }: PatientFormProps) {
-  const [currentStep, setCurrentStep] = React.useState(1);
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
+export function PatientForm() {
+  const router = useRouter()
+  const supabase = createClient()
+  const [step, setStep] = React.useState(1)
+  const [isLoading, setIsLoading] = React.useState(false)
 
   const form = useForm<PatientCreateSchemaType>({
     resolver: zodResolver(PatientCreateSchema),
     defaultValues: {
-      firstName: initialData?.firstName || '',
-      lastName: initialData?.lastName || '',
-      firstNameAr: initialData?.firstNameAr || '',
-      lastNameAr: initialData?.lastNameAr || '',
-      dateOfBirth: initialData?.dateOfBirth || formatDateToDDMMYYYY(new Date()),
-      gender: initialData?.gender || 'MALE',
-      nin: initialData?.nin || '',
-      chifaNumber: initialData?.chifaNumber || '',
-      phone: initialData?.phone || '',
-      phoneSecondary: initialData?.phoneSecondary || '',
-      email: initialData?.email || '',
-      address: initialData?.address || '',
-      city: initialData?.city || '',
-      wilaya: initialData?.wilaya || '',
-      bloodType: initialData?.bloodType,
-      allergies: initialData?.allergies || '',
-      chronicDiseases: initialData?.chronicDiseases || '',
-      currentMedications: initialData?.currentMedications || '',
-      emergencyContact: initialData?.emergencyContact || '',
-      notes: initialData?.notes || '',
+      firstName: '',
+      lastName: '',
+      firstNameAr: '',
+      lastNameAr: '',
+      dateOfBirth: '',
+      gender: 'M',
+      nin: '',
+      chifaNumber: '',
+      phone: '',
+      address: '',
+      wilaya: '',
+      bloodGroup: '',
+      allergies: [],
+      chronicConditions: [],
+      currentMedications: [],
+      notes: '',
     },
-    mode: 'onChange',
-  });
+  })
 
-  const handleNext = async () => {
-    let fieldsToValidate: (keyof PatientCreateSchemaType)[] = [];
-
-    if (currentStep === 1) {
-      fieldsToValidate = ['firstName', 'lastName', 'dateOfBirth', 'gender'];
-    } else if (currentStep === 2) {
-      fieldsToValidate = ['phone'];
-    }
-
-    const isValid = await form.trigger(fieldsToValidate);
-    if (isValid) {
-      setCurrentStep((prev) => Math.min(prev + 1, 3));
-    }
-  };
-
-  const handleBack = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 1));
-  };
-
-  const handleSubmit = async (data: PatientCreateSchemaType) => {
-    setIsSubmitting(true);
+  async function onSubmit(data: PatientCreateSchemaType) {
+    setIsLoading(true)
     try {
-      await onSubmit(data);
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Non authentifié')
+
+      const { data: doctor } = await supabase
+        .from('doctors')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .single()
+
+      if (!doctor) throw new Error('Profil docteur non trouvé')
+
+      const { data: patient, error } = await supabase
+        .from('patients')
+        .insert({
+          doctor_id: doctor.id,
+          first_name: data.firstName,
+          last_name: data.lastName,
+          first_name_ar: data.firstNameAr || null,
+          last_name_ar: data.lastNameAr || null,
+          date_of_birth: data.dateOfBirth,
+          gender: data.gender,
+          national_id: data.nin || null,
+          chifa_number: data.chifaNumber || null,
+          phone: data.phone || null,
+          address: data.address || null,
+          wilaya: data.wilaya || null,
+          blood_group: data.bloodGroup || null,
+          allergies: data.allergies,
+          chronic_conditions: data.chronicConditions,
+          current_medications: data.currentMedications,
+          notes: data.notes || null,
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      toast.success('Patient enregistré avec succès')
+      router.push(`/dashboard/patients/${patient.id}`)
+    } catch (error: any) {
+      toast.error(`Erreur: ${error.message}`)
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false)
     }
-  };
+  }
 
-  // Step 1: Identité
-  const renderStep1 = () => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* French Name */}
-        <FormField
-          control={form.control}
-          name="firstName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Prénom (FR) *</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="Mohamed" className="h-11" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="lastName"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Nom (FR) *</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="Benali" className="h-11" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
+  const nextStep = async () => {
+    let fieldsToValidate: any[] = []
+    if (step === 1) {
+      fieldsToValidate = ['firstName', 'lastName', 'dateOfBirth', 'gender', 'nin', 'chifaNumber']
+    } else if (step === 2) {
+      fieldsToValidate = ['phone', 'wilaya', 'address']
+    }
 
-      {/* Arabic Name */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField
-          control={form.control}
-          name="firstNameAr"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>الاسم (العربية)</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  placeholder="محمد"
-                  className="h-11 text-right"
-                  dir="rtl"
-                  style={{ fontFamily: 'Noto Sans Arabic, sans-serif' }}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="lastNameAr"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>اللقب (العربية)</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  placeholder="بن علي"
-                  className="h-11 text-right"
-                  dir="rtl"
-                  style={{ fontFamily: 'Noto Sans Arabic, sans-serif' }}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
+    const isValid = await form.trigger(fieldsToValidate)
+    if (isValid) {
+      setStep(s => Math.min(s + 1, 3))
+    }
+  }
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Date of Birth */}
-        <FormField
-          control={form.control}
-          name="dateOfBirth"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Date de naissance *</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    {...field}
-                    placeholder="DD/MM/YYYY"
-                    className="h-11 pl-10"
-                    onChange={(e) => {
-                      // Auto-format date
-                      let value = e.target.value.replace(/\D/g, '');
-                      if (value.length >= 2) value = value.slice(0, 2) + '/' + value.slice(2);
-                      if (value.length >= 5) value = value.slice(0, 5) + '/' + value.slice(5, 9);
-                      field.onChange(value);
-                    }}
-                    maxLength={10}
-                  />
-                </div>
-              </FormControl>
-              <FormDescription>Format: JJ/MM/AAAA</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Gender */}
-        <FormField
-          control={form.control}
-          name="gender"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Genre *</FormLabel>
-              <FormControl>
-                <RadioGroup
-                  onValueChange={field.onChange}
-                  value={field.value}
-                  className="flex gap-4 h-11 items-center"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="MALE" id="male" />
-                    <label htmlFor="male" className="flex items-center gap-2 cursor-pointer">
-                      <span className="text-blue-600">♂</span> Masculin
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="FEMALE" id="female" />
-                    <label htmlFor="female" className="flex items-center gap-2 cursor-pointer">
-                      <span className="text-pink-600">♀</span> Féminin
-                    </label>
-                  </div>
-                </RadioGroup>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-
-      {/* NIN and Chifa */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField
-          control={form.control}
-          name="nin"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Numéro NIN</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    {...field}
-                    placeholder="18 chiffres"
-                    className="h-11 pl-10"
-                    maxLength={18}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '');
-                      field.onChange(value);
-                    }}
-                  />
-                </div>
-              </FormControl>
-              <FormDescription>Numéro d'identification national (18 chiffres)</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="chifaNumber"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Numéro Chifa</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input {...field} placeholder="Numéro carte Chifa" className="h-11 pl-10" />
-                </div>
-              </FormControl>
-              <FormDescription>Numéro de la carte Chifa (optionnel)</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-    </div>
-  );
-
-  // Step 2: Contact
-  const renderStep2 = () => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField
-          control={form.control}
-          name="phone"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Téléphone *</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    {...field}
-                    type="tel"
-                    placeholder="0555123456"
-                    className="h-11 pl-10"
-                    maxLength={10}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '');
-                      field.onChange(value);
-                    }}
-                  />
-                </div>
-              </FormControl>
-              <FormDescription>10 chiffres commençant par 05, 06 ou 07</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="phoneSecondary"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Téléphone secondaire</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    {...field}
-                    type="tel"
-                    placeholder="0555123456"
-                    className="h-11 pl-10"
-                    maxLength={10}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '');
-                      field.onChange(value);
-                    }}
-                  />
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-
-      <FormField
-        control={form.control}
-        name="email"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Email</FormLabel>
-            <FormControl>
-              <Input {...field} type="email" placeholder="patient@email.com" className="h-11" />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="address"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Adresse</FormLabel>
-            <FormControl>
-              <Input {...field} placeholder="123 Rue Didouche Mourad" className="h-11" />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField
-          control={form.control}
-          name="city"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Ville</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="Alger" className="h-11" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="wilaya"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Wilaya</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger className="h-11">
-                    <SelectValue placeholder="Sélectionner une wilaya" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent className="max-h-60">
-                  {WILAYAS.map((w) => (
-                    <SelectItem key={w.code} value={w.name}>
-                      {w.code} - {w.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-    </div>
-  );
-
-  // Step 3: Antécédents médicaux
-  const renderStep3 = () => (
-    <div className="space-y-6">
-      {/* Blood Type */}
-      <FormField
-        control={form.control}
-        name="bloodType"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Groupe sanguin</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value}>
-              <FormControl>
-                <SelectTrigger className="h-11 w-full md:w-1/3">
-                  <SelectValue placeholder="Sélectionner" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {BLOOD_TYPES.map((bt) => (
-                  <SelectItem key={bt.value} value={bt.value}>
-                    <span className="flex items-center gap-2">
-                      <span className="text-red-500">🩸</span>
-                      {bt.label}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      {/* Allergies */}
-      <FormField
-        control={form.control}
-        name="allergies"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
-              Allergies
-            </FormLabel>
-            <FormControl>
-              <TagInput
-                value={field.value || ''}
-                onChange={field.onChange}
-                placeholder="Tapez une allergie et appuyez sur Entrée..."
-                suggestions={['Pénicilline', 'Aspirine', 'Sulfamides', 'Iode', 'Latex', 'Arachides']}
-              />
-            </FormControl>
-            <FormDescription>
-              Tapez et appuyez sur Entrée pour ajouter plusieurs allergies
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      {/* Chronic Diseases */}
-      <FormField
-        control={form.control}
-        name="chronicDiseases"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel className="flex items-center gap-2">
-              <Heart className="h-4 w-4 text-orange-500" />
-              Maladies chroniques
-            </FormLabel>
-            <FormControl>
-              <TagInput
-                value={field.value || ''}
-                onChange={field.onChange}
-                placeholder="Tapez une maladie et appuyez sur Entrée..."
-                suggestions={CHRONIC_DISEASES_PRESETS}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      {/* Current Medications */}
-      <FormField
-        control={form.control}
-        name="currentMedications"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel className="flex items-center gap-2">
-              <Pill className="h-4 w-4 text-blue-500" />
-              Médicaments en cours
-            </FormLabel>
-            <FormControl>
-              <TagInput
-                value={field.value || ''}
-                onChange={field.onChange}
-                placeholder="Tapez un médicament et appuyez sur Entrée..."
-                suggestions={['Metformine', 'Insuline', 'Amlodipine', 'Oméprazole', 'Aspirine']}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      {/* Emergency Contact */}
-      <FormField
-        control={form.control}
-        name="emergencyContact"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Contact d'urgence</FormLabel>
-            <FormControl>
-              <Input
-                {...field}
-                placeholder="Nom et numéro de téléphone"
-                className="h-11"
-              />
-            </FormControl>
-            <FormDescription>Personne à contacter en cas d'urgence</FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      {/* Notes */}
-      <FormField
-        control={form.control}
-        name="notes"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Notes médicales</FormLabel>
-            <FormControl>
-              <Textarea
-                {...field}
-                placeholder="Notes privées sur le patient..."
-                className="min-h-[100px] resize-none"
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-    </div>
-  );
+  const prevStep = () => {
+    setStep(s => Math.max(s - 1, 1))
+  }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        {/* Progress Steps */}
-        <div className="flex items-center justify-center mb-8">
-          {STEPS.map((step, index) => {
-            const Icon = step.icon;
-            const isActive = currentStep === step.id;
-            const isCompleted = currentStep > step.id;
+    <div className="space-y-8 pb-12">
+      {/* Progress Indicator */}
+      <div className="relative">
+        <div className="absolute top-1/2 left-0 w-full h-0.5 bg-slate-200 -translate-y-1/2" />
+        <div className="relative flex justify-between">
+          {STEPS.map((s) => (
+            <div key={s.id} className="flex flex-col items-center gap-2">
+              <div 
+                className={cn(
+                  "relative z-10 w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all duration-300",
+                  step >= s.id 
+                    ? "bg-[#1B4F72] border-[#1B4F72] text-white" 
+                    : "bg-white border-slate-300 text-slate-400"
+                )}
+              >
+                {step > s.id ? <Check className="h-5 w-5" /> : <s.icon className="h-5 w-5" />}
+              </div>
+              <span className={cn(
+                "text-xs font-bold uppercase tracking-wider",
+                step >= s.id ? "text-[#1B4F72]" : "text-slate-400"
+              )}>
+                {s.title}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
 
-            return (
-              <React.Fragment key={step.id}>
-                <div className="flex flex-col items-center">
-                  <div
-                    className={cn(
-                      'w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200',
-                      isActive && 'bg-primary text-primary-foreground ring-4 ring-primary/20',
-                      isCompleted && 'bg-primary text-primary-foreground',
-                      !isActive && !isCompleted && 'bg-muted text-muted-foreground'
-                    )}
-                  >
-                    {isCompleted ? (
-                      <Check className="w-5 h-5" />
-                    ) : (
-                      <Icon className="w-5 h-5" />
-                    )}
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <Card className="border-none shadow-md overflow-hidden">
+            <CardContent className="p-6 md:p-8">
+              {/* STEP 1: IDENTITY */}
+              {step === 1 && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="lastName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nom <span className="text-red-500">*</span></FormLabel>
+                          <FormControl>
+                            <Input placeholder="BOUMEDIENE" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="firstName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Prénom <span className="text-red-500">*</span></FormLabel>
+                          <FormControl>
+                            <Input placeholder="Houari" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
-                  <div className="mt-2 text-center hidden sm:block">
-                    <p className={cn(
-                      'text-sm font-medium',
-                      isActive ? 'text-primary' : 'text-muted-foreground'
-                    )}>
-                      {step.title}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{step.description}</p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6" dir="rtl">
+                    <FormField
+                      control={form.control}
+                      name="lastNameAr"
+                      render={({ field }) => (
+                        <FormItem className="text-right">
+                          <FormLabel className="w-full block">اللقب</FormLabel>
+                          <FormControl>
+                            <Input placeholder="بومدين" className="text-right" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="firstNameAr"
+                      render={({ field }) => (
+                        <FormItem className="text-right">
+                          <FormLabel className="w-full block">الاسم</FormLabel>
+                          <FormControl>
+                            <Input placeholder="هواري" className="text-right" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+                    <FormField
+                      control={form.control}
+                      name="dateOfBirth"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Date de naissance <span className="text-red-500">*</span></FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="gender"
+                      render={({ field }) => (
+                        <FormItem className="space-y-3">
+                          <FormLabel>Genre <span className="text-red-500">*</span></FormLabel>
+                          <FormControl>
+                            <ToggleGroup 
+                              type="single" 
+                              value={field.value} 
+                              onValueChange={(v) => v && field.onChange(v)}
+                              className="justify-start gap-2"
+                            >
+                              <ToggleGroupItem value="M" className="flex-1 max-w-[120px] rounded-lg border px-4 py-2 data-[state=on]:bg-[#1B4F72] data-[state=on]:text-white">
+                                Homme
+                              </ToggleGroupItem>
+                              <ToggleGroupItem value="F" className="flex-1 max-w-[120px] rounded-lg border px-4 py-2 data-[state=on]:bg-pink-600 data-[state=on]:text-white">
+                                Femme
+                              </ToggleGroupItem>
+                            </ToggleGroup>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="nin"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Numéro NIN (15 chiffres)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="000123456789012" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="chifaNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Numéro Carte Chifa</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Ex: 1234567890" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 </div>
-                {index < STEPS.length - 1 && (
-                  <div
-                    className={cn(
-                      'h-0.5 w-16 sm:w-24 mx-2 transition-colors',
-                      currentStep > step.id ? 'bg-primary' : 'bg-muted'
+              )}
+
+              {/* STEP 2: CONTACT */}
+              {step === 2 && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Téléphone (05/06/07...)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="05XXXXXXXX" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="wilaya"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Wilaya <span className="text-red-500">*</span></FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-11">
+                                <SelectValue placeholder="Sélectionner une wilaya" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="max-h-60">
+                              {WILAYAS.map(w => (
+                                <SelectItem key={w} value={w}>{w}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="address"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Adresse complète</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Cité 1200 logements, Rue 12..." {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
                   />
-                )}
-              </React.Fragment>
-            );
-          })}
-        </div>
-
-        {/* Form Content */}
-        <Card>
-          <CardContent className="pt-6">
-            {currentStep === 1 && renderStep1()}
-            {currentStep === 2 && renderStep2()}
-            {currentStep === 3 && renderStep3()}
-          </CardContent>
-        </Card>
-
-        {/* Navigation Buttons */}
-        <div className="flex items-center justify-between pt-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleBack}
-            disabled={currentStep === 1 || isSubmitting}
-            className="gap-2"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Précédent
-          </Button>
-
-          {currentStep < 3 ? (
-            <Button
-              type="button"
-              onClick={handleNext}
-              className="gap-2"
-              style={{ backgroundColor: '#1B4F72' }}
-            >
-              Suivant
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          ) : (
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="gap-2"
-              style={{ backgroundColor: '#1B4F72' }}
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Enregistrement...
-                </>
-              ) : (
-                <>
-                  <Check className="w-4 h-4" />
-                  {isEditing ? 'Enregistrer les modifications' : 'Créer le patient'}
-                </>
+                </div>
               )}
+
+              {/* STEP 3: MEDICAL HISTORY */}
+              {step === 3 && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                  <FormField
+                    control={form.control}
+                    name="bloodGroup"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Groupe Sanguin</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="h-11">
+                              <SelectValue placeholder="Groupe sanguin" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bg => (
+                              <SelectItem key={bg} value={bg}>{bg}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="space-y-4">
+                    <Label>Allergies</Label>
+                    <TagInput 
+                      tags={form.watch('allergies')} 
+                      setTags={(tags) => form.setValue('allergies', tags)} 
+                      placeholder="Ex: Pénicilline, Arachides..."
+                    />
+                  </div>
+
+                  <div className="space-y-4">
+                    <Label>Maladies Chroniques</Label>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {CHRONIC_PRESETS.map(preset => (
+                        <Badge 
+                          key={preset}
+                          variant="outline" 
+                          className={cn(
+                            "cursor-pointer hover:bg-slate-100 py-1.5 px-3",
+                            form.watch('chronicConditions').includes(preset) && "bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100"
+                          )}
+                          onClick={() => {
+                            const current = form.getValues('chronicConditions')
+                            if (current.includes(preset)) {
+                              form.setValue('chronicConditions', current.filter(c => c !== preset))
+                            } else {
+                              form.setValue('chronicConditions', [...current, preset])
+                            }
+                          }}
+                        >
+                          {preset}
+                        </Badge>
+                      ))}
+                    </div>
+                    <TagInput 
+                      tags={form.watch('chronicConditions')} 
+                      setTags={(tags) => form.setValue('chronicConditions', tags)} 
+                      placeholder="Ajouter manuellement..."
+                    />
+                  </div>
+
+                  <div className="space-y-4">
+                    <Label>Médicaments en cours</Label>
+                    <TagInput 
+                      tags={form.watch('currentMedications')} 
+                      setTags={(tags) => form.setValue('currentMedications', tags)} 
+                      placeholder="Nom du médicament..."
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="notes"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Notes médicales générales</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="Observations particulières, antécédents familiaux..." className="min-h-[120px]" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Navigation Buttons */}
+          <div className="flex justify-between gap-4">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={prevStep} 
+              disabled={step === 1 || isLoading}
+              className="h-12 px-8"
+            >
+              <ChevronLeft className="mr-2 h-4 w-4" />
+              Retour
             </Button>
-          )}
-        </div>
-      </form>
-    </Form>
-  );
+            
+            {step < 3 ? (
+              <Button type="button" onClick={nextStep} className="h-12 px-8 bg-[#1B4F72]">
+                Suivant
+                <ChevronRight className="ml-2 h-4 w-4" />
+              </Button>
+            ) : (
+              <Button type="submit" className="h-12 px-8 bg-[#1B4F72]" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Enregistrement...
+                  </>
+                ) : (
+                  <>
+                    <Check className="mr-2 h-4 w-4" />
+                    Enregistrer le patient
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+        </form>
+      </Form>
+    </div>
+  )
+}
+
+function TagInput({ tags, setTags, placeholder }: { tags: string[], setTags: (tags: string[]) => void, placeholder: string }) {
+  const [input, setInput] = React.useState('')
+
+  const addTag = () => {
+    const trimmed = input.trim()
+    if (trimmed && !tags.includes(trimmed)) {
+      setTags([...tags, trimmed])
+      setInput('')
+    }
+  }
+
+  const removeTag = (tag: string) => {
+    setTags(tags.filter(t => t !== tag))
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex gap-2">
+        <Input 
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              addTag()
+            }
+          }}
+          placeholder={placeholder}
+          className="h-11"
+        />
+        <Button type="button" variant="secondary" onClick={addTag} className="h-11 shrink-0">
+          <Plus className="h-4 w-4 mr-2" />
+          Ajouter
+        </Button>
+      </div>
+      <div className="flex flex-wrap gap-2 min-h-[32px]">
+        {tags.map(tag => (
+          <Badge key={tag} className="bg-slate-100 text-slate-700 hover:bg-slate-200 py-1.5 px-3 flex items-center gap-2 border-none">
+            {tag}
+            <button type="button" onClick={() => removeTag(tag)} className="text-slate-400 hover:text-red-500 transition-colors">
+              <X className="h-3 w-3" />
+            </button>
+          </Badge>
+        ))}
+      </div>
+    </div>
+  )
 }
