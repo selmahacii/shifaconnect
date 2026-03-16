@@ -239,83 +239,32 @@ export type PatientUpdateSchemaType = z.infer<typeof PatientUpdateSchema>;
 // ============================================
 
 export const ConsultationSchema = z.object({
-  patientId: z
-    .string()
-    .min(1, 'Veuillez sélectionner un patient'),
-  consultationDate: dateSchema,
-  consultationTime: optionalTimeSchema,
-  chiefComplaint: z
-    .string()
-    .min(1, 'Le motif de consultation est requis')
-    .max(500, 'Le motif de consultation ne peut pas dépasser 500 caractères'),
-  chiefComplaintAr: z
-    .string()
-    .max(500, 'Le motif en arabe ne peut pas dépasser 500 caractères')
-    .optional(),
-  presentIllness: z
-    .string()
-    .max(5000, 'L\'histoire de la maladie ne peut pas dépasser 5000 caractères')
-    .optional(),
-  presentIllnessAr: z
-    .string()
-    .max(5000, 'L\'histoire en arabe ne peut pas dépasser 5000 caractères')
-    .optional(),
-  examinationNotes: z
-    .string()
-    .max(5000, 'Les notes d\'examen ne peuvent pas dépasser 5000 caractères')
-    .optional(),
-  examinationNotesAr: z
-    .string()
-    .max(5000, 'Les notes d\'examen en arabe ne peuvent pas dépasser 5000 caractères')
-    .optional(),
-  diagnosis: z
-    .string()
-    .max(2000, 'Le diagnostic ne peut pas dépasser 2000 caractères')
-    .optional(),
-  diagnosisAr: z
-    .string()
-    .max(2000, 'Le diagnostic en arabe ne peut pas dépasser 2000 caractères')
-    .optional(),
-  icdCode: z
-    .string()
-    .max(20, 'Le code CIM-10 ne peut pas dépasser 20 caractères')
-    .optional(),
-  treatmentPlan: z
-    .string()
-    .max(5000, 'Le plan de traitement ne peut pas dépasser 5000 caractères')
-    .optional(),
-  treatmentPlanAr: z
-    .string()
-    .max(5000, 'Le plan de traitement en arabe ne peut pas dépasser 5000 caractères')
-    .optional(),
-  followUpDate: optionalDateSchema,
-  followUpNotes: z
-    .string()
-    .max(1000, 'Les notes de suivi ne peuvent pas dépasser 1000 caractères')
-    .optional(),
-  vitals: z
-    .object({
-      systolicBP: z.number().min(60).max(250).optional(),
-      diastolicBP: z.number().min(40).max(180).optional(),
-      temperature: z.number().min(34).max(43).optional(),
-      pulse: z.number().min(30).max(250).optional(),
-      weight: z.number().min(0).max(500).optional(),
-      height: z.number().min(0).max(300).optional(),
-      bmi: z.number().optional(),
-    })
-    .optional(),
-  fee: z
-    .number()
-    .min(0, 'Les honoraires ne peuvent pas être négatifs')
-    .max(100000000, 'Les honoraires sont trop élevés')
-    .optional(),
-  paid: z.boolean().optional(),
-  paymentMethod: PaymentMethodSchema.optional(),
-  notes: z
-    .string()
-    .max(2000, 'Les notes ne peuvent pas dépasser 2000 caractères')
-    .optional(),
-  status: ConsultationStatusSchema.optional(),
+  patientId: z.string().min(1, 'Patient requis'),
+  motif: z.string().min(1, 'Le motif de consultation est requis'),
+  symptoms: z.string().optional(),
+  
+  // Examen clinique (Constantes)
+  systolicBP: z.number().optional().nullable(),
+  diastolicBP: z.number().optional().nullable(),
+  heartRate: z.number().optional().nullable(),
+  temperature: z.number().optional().nullable(),
+  weight: z.number().optional().nullable(),
+  height: z.number().optional().nullable(),
+  oxygenSaturation: z.number().optional().nullable(),
+  
+  // Diagnostic
+  diagnosis: z.string().min(1, 'Le diagnostic est requis'),
+  icdCode: z.string().optional(),
+  clinicalNotes: z.string().optional(),
+  
+  // Suivi
+  followUpDate: z.string().optional().nullable(),
+  followUpNotes: z.string().optional(),
+  
+  // UI Actions (Quick checkboxes)
+  createPrescription: z.boolean().default(false),
+  scheduleFollowUp: z.boolean().default(false),
+  uploadLabResult: z.boolean().default(false),
 });
 
 export type ConsultationSchemaType = z.infer<typeof ConsultationSchema>;
