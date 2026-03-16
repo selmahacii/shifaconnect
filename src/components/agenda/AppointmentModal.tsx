@@ -4,7 +4,7 @@
 import * as React from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { Check, Search, Loader2, Calendar as CalendarIcon, Clock, User, Plus } from 'lucide-react'
+import { Check, Search, Loader2, Calendar as CalendarIcon, Clock, User } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 
@@ -46,7 +46,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { AppointmentSchema, AppointmentSchemaType } from '@/lib/validations/schemas'
+import { AppointmentSchema } from '@/lib/validations/schemas'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 
@@ -63,7 +63,7 @@ export function AppointmentModal({ open, onOpenChange, selectedSlot, onSuccess }
   const [isSearching, setIsSearching] = React.useState(false)
   const supabase = createClient()
 
-  const form = useForm<AppointmentSchemaType>({
+  const form = useForm<any>({
     resolver: zodResolver(AppointmentSchema),
     defaultValues: {
       patientId: '',
@@ -71,7 +71,7 @@ export function AppointmentModal({ open, onOpenChange, selectedSlot, onSuccess }
       appointmentTime: selectedSlot ? format(selectedSlot.start, 'HH:mm') : '09:00',
       duration: 20,
       reason: '',
-      status: 'scheduled',
+      status: 'SCHEDULED',
       notes: '',
     },
   })
@@ -107,7 +107,7 @@ export function AppointmentModal({ open, onOpenChange, selectedSlot, onSuccess }
     setIsSearching(false)
   }
 
-  async function onSubmit(data: AppointmentSchemaType) {
+  async function onSubmit(data: any) {
     setIsLoading(true)
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -211,7 +211,7 @@ export function AppointmentModal({ open, onOpenChange, selectedSlot, onSuccess }
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Durée (min)</FormLabel>
-                    <Select onValueChange={(v) => field.onChange(parseInt(v))} value={field.value.toString()}>
+                    <Select onValueChange={(v) => field.onChange(parseInt(v))} value={field.value?.toString()}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Durée" />
@@ -242,8 +242,8 @@ export function AppointmentModal({ open, onOpenChange, selectedSlot, onSuccess }
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="scheduled">Planifié</SelectItem>
-                        <SelectItem value="confirmed">Confirmé</SelectItem>
+                        <SelectItem value="SCHEDULED">Planifié</SelectItem>
+                        <SelectItem value="CONFIRMED">Confirmé</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -313,7 +313,7 @@ function PatientSearch({ patients, value, onSelect, onSearch, isSearching }: any
               !value && "text-muted-foreground"
             )}
           >
-            {value ? `${selectedPatient?.last_name} ${selectedPatient?.first_name}` : "Rechercher un patient..."}
+            {value ? `${selectedPatient?.last_name || ''} ${selectedPatient?.first_name || ''}`.trim() || 'Patient sélectionné' : "Rechercher un patient..."}
             <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </FormControl>
@@ -345,7 +345,7 @@ function PatientSearch({ patients, value, onSelect, onSearch, isSearching }: any
                   />
                   <div className="flex items-center gap-2">
                     <div className="h-6 w-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] text-slate-500 font-bold uppercase">
-                      {p.last_name[0]}{p.first_name[0]}
+                      {(p.last_name?.[0] || '')}{(p.first_name?.[0] || '')}
                     </div>
                     <span>{p.last_name} {p.first_name}</span>
                   </div>

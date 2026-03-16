@@ -1,11 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
-import { 
-  Users, 
-  Stethoscope, 
-  Calendar, 
-  ShieldCheck, 
-  Droplet, 
+import {
+  Users,
+  Stethoscope,
+  Calendar,
+  ShieldCheck,
+  Droplet,
   ArrowLeft,
   Settings
 } from 'lucide-react'
@@ -20,7 +20,14 @@ import { fr } from 'date-fns/locale'
 
 export const dynamic = 'force-dynamic'
 
-export default async function PatientDetailPage({ params }: { params: { id: string } }) {
+
+export default async function PatientDetailPage({ 
+  params,
+  searchParams
+}: { 
+  params: { id: string },
+  searchParams: { startConsultation?: string, appointmentId?: string }
+}) {
   const supabase = await createClient()
   const { id } = await params
 
@@ -114,8 +121,8 @@ export default async function PatientDetailPage({ params }: { params: { id: stri
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <ConsultationModal 
-                patientId={id} 
+              <ConsultationModal
+                patientId={id}
                 patientName={`${patient.first_name} ${patient.last_name}`}
                 trigger={
                   <Button className="bg-white text-[#1B4F72] hover:bg-white/90">
@@ -153,7 +160,7 @@ export default async function PatientDetailPage({ params }: { params: { id: stri
               <div>
                 <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Dernière visite</p>
                 <p className="font-semibold text-slate-700">
-                  {patient.consultations?.length > 0 
+                  {patient.consultations?.length > 0
                     ? format(new Date(patient.consultations.sort((a: any, b: any) => new Date(b.consultation_date).getTime() - new Date(a.consultation_date).getTime())[0].consultation_date), 'dd MMMM yyyy', { locale: fr })
                     : 'Aucune historique'}
                 </p>

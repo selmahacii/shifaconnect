@@ -164,11 +164,11 @@ export function CalendarView({ initialAppointments }: CalendarViewProps) {
             {(['month', 'week', 'day'] as View[]).map((v) => (
               <Button
                 key={v}
-                variant={view === v ? 'white' : 'ghost'}
+                variant={view === v ? 'secondary' : 'ghost'}
                 size="sm"
                 className={cn(
                   "px-4 text-xs font-bold transition-all",
-                  view === v ? "shadow-sm" : "text-slate-500"
+                  view === v ? "shadow-sm bg-white" : "text-slate-500"
                 )}
                 onClick={() => setView(v)}
               >

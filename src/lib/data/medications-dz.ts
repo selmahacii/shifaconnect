@@ -5,6 +5,51 @@ export interface MedicationData {
   forms: string[];
 }
 
+export const MEDICATION_FORMS = [
+  'Comprimé', 'Gélule', 'Sirop', 'Injectable', 'Sachet', 
+  'Suppositoire', 'Pommade', 'Collyre', 'Spray', 'Patch', 
+  'Lyoc', 'Gouttes buvables', 'Suspension buvable', 'Gel',
+  'Ovule', 'Stylo pré-rempli', 'Flacon'
+];
+
+export const COMMON_FREQUENCIES = [
+  '1 fois par jour',
+  '2 fois par jour',
+  '3 fois par jour',
+  '4 fois par jour',
+  'Matin et soir',
+  'Matin, midi et soir',
+  'Toutes les 8 heures',
+  'Uniquement si besoin',
+  'Avant le coucher',
+  'Le matin à jeun'
+];
+
+export const COMMON_DURATIONS = [
+  '3 jours',
+  '5 jours',
+  '7 jours',
+  '10 jours',
+  '15 jours',
+  '1 mois',
+  '3 mois',
+  '6 mois',
+  'À vie'
+];
+
+export function searchMedications(query: string, limit = 10) {
+  const q = query.toLowerCase();
+  return MEDICATIONS_DZ
+    .filter(m => m.name.toLowerCase().includes(q))
+    .slice(0, limit)
+    .map(m => ({
+      name: m.name,
+      dosages: m.dosages,
+      forms: m.forms,
+      category: 'Générique/Marque'
+    }));
+}
+
 export const MEDICATIONS_DZ: MedicationData[] = [
   {
     name: "Paracétamol",

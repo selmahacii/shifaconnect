@@ -102,7 +102,7 @@ export function TodaysSchedule({ appointments: initialAppointments, className }:
                     <p className="font-bold text-slate-900 truncate text-sm">
                       {apt.patient?.last_name || apt.patientName} {apt.patient?.first_name || ''}
                     </p>
-                    {getStatusIndicator(apt.status.toLowerCase())}
+                    {getStatusIndicator(apt.status)}
                   </div>
                   <p className="text-[10px] text-slate-500 truncate mt-0.5">
                     {apt.reason || 'Consultation'}
@@ -110,7 +110,7 @@ export function TodaysSchedule({ appointments: initialAppointments, className }:
                 </div>
 
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                   {(apt.status.toLowerCase() === 'confirmed' || apt.status.toLowerCase() === 'scheduled') && (
+                   {(apt.status.toUpperCase() === 'CONFIRMED' || apt.status.toUpperCase() === 'SCHEDULED') && (
                      <Button asChild size="icon" variant="ghost" className="h-8 w-8 text-[#1B4F72] hover:bg-blue-50" title="Démarrer consultation">
                         <Link href={`/dashboard/patients/${apt.patient_id || apt.patientId}?startConsultation=true&appointmentId=${apt.id}`}>
                            <Play className="h-4 w-4" />
@@ -124,9 +124,9 @@ export function TodaysSchedule({ appointments: initialAppointments, className }:
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                         <DropdownMenuItem onClick={() => updateStatus(apt.id, 'confirmed')}>Confirmer</DropdownMenuItem>
-                         <DropdownMenuItem onClick={() => updateStatus(apt.id, 'completed')}>Marquer Terminé</DropdownMenuItem>
-                         <DropdownMenuItem onClick={() => updateStatus(apt.id, 'cancelled')} className="text-red-600">Annuler</DropdownMenuItem>
+                         <DropdownMenuItem onClick={() => updateStatus(apt.id, 'CONFIRMED')}>Confirmer</DropdownMenuItem>
+                         <DropdownMenuItem onClick={() => updateStatus(apt.id, 'COMPLETED')}>Marquer Terminé</DropdownMenuItem>
+                         <DropdownMenuItem onClick={() => updateStatus(apt.id, 'CANCELLED')} className="text-red-600">Annuler</DropdownMenuItem>
                       </DropdownMenuContent>
                    </DropdownMenu>
                 </div>
@@ -150,13 +150,13 @@ export function TodaysSchedule({ appointments: initialAppointments, className }:
 }
 
 function getStatusIndicator(status: string) {
-  switch (status) {
-    case 'scheduled': return <div className="h-1.5 w-1.5 rounded-full bg-blue-500" title="Planifié" />
-    case 'confirmed': return <div className="h-1.5 w-1.5 rounded-full bg-green-500" title="Confirmé" />
-    case 'cancelled': 
-    case 'rejected': return <div className="h-1.5 w-1.5 rounded-full bg-red-500" title="Annulé" />
-    case 'no-show': return <div className="h-1.5 w-1.5 rounded-full bg-slate-400" title="No-show" />
-    case 'completed': return <div className="h-1.5 w-1.5 rounded-full bg-purple-500" title="Terminé" />
+  switch (status.toUpperCase()) {
+    case 'SCHEDULED': return <div className="h-1.5 w-1.5 rounded-full bg-blue-500" title="Planifié" />
+    case 'CONFIRMED': return <div className="h-1.5 w-1.5 rounded-full bg-green-500" title="Confirmé" />
+    case 'CANCELLED': 
+    case 'REJECTED': return <div className="h-1.5 w-1.5 rounded-full bg-red-500" title="Annulé" />
+    case 'NO_SHOW': return <div className="h-1.5 w-1.5 rounded-full bg-slate-400" title="No-show" />
+    case 'COMPLETED': return <div className="h-1.5 w-1.5 rounded-full bg-purple-500" title="Terminé" />
     default: return <div className="h-1.5 w-1.5 rounded-full bg-slate-200" />
   }
 }

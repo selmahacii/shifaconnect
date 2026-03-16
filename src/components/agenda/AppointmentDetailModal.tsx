@@ -10,7 +10,6 @@ import {
   Stethoscope, 
   X, 
   CheckCircle2, 
-  Ban, 
   Trash2,
   ExternalLink,
   Loader2
@@ -51,7 +50,7 @@ export function AppointmentDetailModal({ open, onOpenChange, appointment, onSucc
     try {
       const { error } = await supabase
         .from('appointments')
-        .update({ status: newStatus })
+        .update({ status: newStatus } as any)
         .eq('id', appointment.id)
 
       if (error) throw error
@@ -86,13 +85,13 @@ export function AppointmentDetailModal({ open, onOpenChange, appointment, onSucc
   }
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'scheduled': return <Badge className="bg-blue-100 text-blue-700 border-none">Planifié</Badge>
-      case 'confirmed': return <Badge className="bg-green-100 text-green-700 border-none">Confirmé</Badge>
-      case 'cancelled': return <Badge className="bg-red-100 text-red-700 border-none">Annulé</Badge>
-      case 'no-show': return <Badge className="bg-slate-100 text-slate-700 border-none">No-show</Badge>
-      case 'completed': return <Badge className="bg-purple-100 text-purple-700 border-none">Terminé</Badge>
-      default: return null
+    switch (status.toUpperCase()) {
+      case 'SCHEDULED': return <Badge className="bg-blue-100 text-blue-700 border-none">Planifié</Badge>
+      case 'CONFIRMED': return <Badge className="bg-green-100 text-green-700 border-none">Confirmé</Badge>
+      case 'CANCELLED': return <Badge className="bg-red-100 text-red-700 border-none">Annulé</Badge>
+      case 'NO_SHOW': return <Badge className="bg-slate-100 text-slate-700 border-none">No-show</Badge>
+      case 'COMPLETED': return <Badge className="bg-purple-100 text-purple-700 border-none">Terminé</Badge>
+      default: return <Badge variant="outline">{status}</Badge>
     }
   }
 
@@ -150,21 +149,21 @@ export function AppointmentDetailModal({ open, onOpenChange, appointment, onSucc
           )}
 
           <div className="flex flex-wrap gap-2 pt-4">
-            {appointment.status !== 'completed' && appointment.status !== 'cancelled' && (
+            {appointment.status.toUpperCase() !== 'COMPLETED' && appointment.status.toUpperCase() !== 'CANCELLED' && (
               <>
                 <Button 
                   size="sm" 
                   className="bg-green-600 hover:bg-green-700"
-                  onClick={() => updateStatus('confirmed')}
+                  onClick={() => updateStatus('CONFIRMED')}
                   disabled={isLoading}
                 >
-                  <CheckCircle2 className="h-4 w-4 mr-2" /> Confirmer
+                  <CheckCircle2 className="h-4 w-4 mr-2" /> {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirmer'}
                 </Button>
                 <Button 
                   size="sm" 
                   variant="outline" 
                   className="text-red-600 hover:bg-red-50 border-red-100"
-                  onClick={() => updateStatus('cancelled')}
+                  onClick={() => updateStatus('CANCELLED')}
                   disabled={isLoading}
                 >
                   <X className="h-4 w-4 mr-2" /> Annuler
@@ -172,7 +171,7 @@ export function AppointmentDetailModal({ open, onOpenChange, appointment, onSucc
               </>
             )}
             
-            {appointment.status === 'confirmed' && (
+            {(appointment.status.toUpperCase() === 'CONFIRMED' || appointment.status.toUpperCase() === 'SCHEDULED') && (
               <Button asChild size="sm" className="bg-[#1B4F72] hover:bg-[#153e5a]">
                 <Link href={`/dashboard/patients/${appointment.patient_id}?startConsultation=true&appointmentId=${appointment.id}`}>
                   <Stethoscope className="h-4 w-4 mr-2" /> Démarrer consultation
