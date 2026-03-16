@@ -31,6 +31,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 interface AppointmentDetailModalProps {
   open: boolean
@@ -63,8 +64,9 @@ export function AppointmentDetailModal({ open, onOpenChange, appointment, onSucc
     }
   }
 
+  const [isConfirmOpen, setIsConfirmOpen] = React.useState(false)
+
   const deleteAppointment = async () => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce rendez-vous ?')) return
     setIsLoading(true)
     try {
       const { error } = await (supabase.from('appointments') as any)
@@ -72,13 +74,14 @@ export function AppointmentDetailModal({ open, onOpenChange, appointment, onSucc
         .eq('id', appointment.id)
 
       if (error) throw error
-      toast.success('Rendez-vous supprimé')
+      toast.success('Rendez-vous supprimé Successfully ✓')
       onOpenChange(false)
       if (onSuccess) onSuccess()
     } catch (error: any) {
       toast.error(`Erreur: ${error.message}`)
     } finally {
       setIsLoading(false)
+      setIsConfirmOpen(false)
     }
   }
 
@@ -177,9 +180,19 @@ export function AppointmentDetailModal({ open, onOpenChange, appointment, onSucc
               </Button>
             )}
 
-            <Button size="sm" variant="ghost" className="text-slate-400 ml-auto" onClick={deleteAppointment} disabled={isLoading}>
+            <Button size="sm" variant="ghost" className="text-slate-400 ml-auto" onClick={() => setIsConfirmOpen(true)} disabled={isLoading}>
               <Trash2 className="h-4 w-4" />
             </Button>
+            <ConfirmDialog
+              open={isConfirmOpen}
+              onOpenChange={setIsConfirmOpen}
+              title="Supprimer le rendez-vous"
+              description="Êtes-vous sûr de vouloir supprimer ce rendez-vous ? Cette action est irréversible."
+              confirmLabel="Supprimer"
+              variant="destructive"
+              onConfirm={deleteAppointment}
+              isLoading={isLoading}
+            />
           </div>
         </div>
 

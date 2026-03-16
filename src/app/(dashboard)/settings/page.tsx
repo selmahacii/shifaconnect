@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Badge } from '@/components/ui/badge'
 import { 
   User, 
   Settings as SettingsIcon, 
@@ -74,10 +75,10 @@ export default function SettingsPage() {
       phone: formData.get('phone'),
     }
 
-    const { error } = await supabase
+    const { error } = await (supabase
       .from('doctors')
-      .update(updates)
-      .eq('auth_user_id', user.id)
+      .update(updates as any)
+      .eq('auth_user_id', user.id)) as any
 
     if (error) {
       toast.error("Erreur lors de la mise à jour")

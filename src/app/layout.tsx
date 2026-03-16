@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import { Providers } from "./providers";
 
 const inter = Inter({
@@ -47,6 +48,7 @@ export default function RootLayout({
         <Providers>
           {children}
           <Toaster />
+          <SonnerToaster position="top-center" expand={false} richColors />
         </Providers>
       </body>
     </html>
