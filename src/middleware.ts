@@ -1,59 +1,70 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
+import { Database } from '@/lib/types/database'
 
-// Routes that don't require authentication
-const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password']
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
 
-// API routes that don't require authentication
-const publicApiRoutes = ['/api/auth/login', '/api/auth/register', '/api/auth/reset-password']
+  const supabase = createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set({ name, value, ...options }))
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
 
-export function middleware(request: NextRequest) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
   const { pathname } = request.nextUrl
-  
-  // Get session token from cookies
-  const sessionToken = request.cookies.get('session_token')?.value
-  
-  // Check if route is public
-  const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith(route + '/'))
-  const isPublicApiRoute = publicApiRoutes.some(route => pathname === route || pathname.startsWith(route + '/'))
-  
-  // Allow public API routes
-  if (isPublicApiRoute) {
-    return NextResponse.next()
+
+  // Protected routes: everything under /dashboard
+  const isDashboardRoute = pathname.startsWith('/dashboard')
+  // Auth routes: login and register
+  const isAuthRoute = pathname === '/login' || pathname === '/register'
+
+  // If user is not logged in and tries to access dashboard, redirect to login
+  if (isDashboardRoute && !user) {
+    const url = new URL('/login', request.url)
+    url.searchParams.set('redirect', pathname)
+    return NextResponse.redirect(url)
   }
-  
-  // Allow other API routes (they handle their own auth)
-  if (pathname.startsWith('/api/')) {
-    return NextResponse.next()
-  }
-  
-  // Allow static files
-  if (pathname.startsWith('/_next/') || pathname.startsWith('/public/') || pathname.includes('.')) {
-    return NextResponse.next()
-  }
-  
-  // If accessing protected route without session, redirect to login
-  if (!isPublicRoute && !sessionToken) {
-    const loginUrl = new URL('/login', request.url)
-    loginUrl.searchParams.set('redirect', pathname)
-    return NextResponse.redirect(loginUrl)
-  }
-  
-  // If accessing auth routes with valid session, redirect to dashboard
-  if (isPublicRoute && sessionToken && pathname !== '/forgot-password') {
+
+  // If user is logged in and tries to access auth pages, redirect to dashboard
+  if (isAuthRoute && user) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
-  
-  // If root path, redirect to dashboard or login
+
+  // Root path handling
   if (pathname === '/') {
-    if (sessionToken) {
+    if (user) {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     } else {
       return NextResponse.redirect(new URL('/login', request.url))
     }
   }
-  
-  return NextResponse.next()
+
+  return response
 }
 
 export const config = {
@@ -64,6 +75,7 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder
+     * - fonts folder
      */
     '/((?!_next/static|_next/image|favicon.ico|public/|fonts/).*)',
   ],

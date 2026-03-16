@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { PatientCreateSchema, validateFormData } from '@/lib/validations/schemas';
 import { PAGINATION } from '@/lib/utils';
+import { logAction, AuditAction } from '@/lib/audit';
 
 // GET /api/patients - List patients with search, filter, and pagination
 export async function GET(request: NextRequest) {
@@ -217,6 +218,14 @@ export async function POST(request: NextRequest) {
         notes: data.notes || null,
         isActive: true,
       },
+    });
+    
+    // Log audit action
+    await logAction({
+      action: AuditAction.CREATE,
+      entityType: 'PATIENT',
+      entityId: patient.id,
+      newValue: patient,
     });
 
     return NextResponse.json({ 

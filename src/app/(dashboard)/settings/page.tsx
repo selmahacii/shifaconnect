@@ -311,9 +311,15 @@ export default function SettingsPage() {
             </Link>
           </Button>
           <Button variant="outline" asChild>
-            <Link href="/consultations">
+            <Link href="/dashboard/consultations">
               <Building2 className="h-4 w-4 mr-2" />
               Voir les consultations
+            </Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href="/dashboard/settings/audit">
+              <Shield className="h-4 w-4 mr-2" />
+              Journal d&apos;audit
             </Link>
           </Button>
         </div>

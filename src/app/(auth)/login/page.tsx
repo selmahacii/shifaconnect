@@ -1,216 +1,163 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Mail, Lock, Loader2, Eye, EyeOff, Stethoscope, KeyRound } from 'lucide-react';
-import { useAuthStore } from '@/stores/auth-store';
-import { LoginSchema, type LoginSchemaType } from '@/lib/validations/schemas';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import {
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { useToast } from '@/hooks/use-toast';
+import * as React from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useForm } from 'react-hook-form'
+import * as z from 'zod'
+import { Stethoscope, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { toast } from 'sonner'
+
+const loginSchema = z.object({
+  email: z.string().email('Veuillez entrer une adresse email valide'),
+  password: z.string().min(6, 'Le mot de passe doit contenir au moins 6 caractères'),
+})
+
+type LoginFormValues = z.infer<typeof loginSchema>
 
 export default function LoginPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { toast } = useToast();
-  const { login, isLoading } = useAuthStore();
-  const [showPassword, setShowPassword] = useState(false);
-  const [resetDialogOpen, setResetDialogOpen] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
-  const [resetLoading, setResetLoading] = useState(false);
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const redirect = searchParams.get('redirect') || '/dashboard'
+  const supabase = createClient()
 
-  const redirect = searchParams.get('redirect') || '/dashboard';
+  const [isLoading, setIsLoading] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
+  const [showPassword, setShowPassword] = React.useState(false)
 
-  const form = useForm<LoginSchemaType>({
-    resolver: zodResolver(LoginSchema),
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
     defaultValues: {
       email: '',
       password: '',
     },
-  });
+  })
 
-  const onSubmit = async (data: LoginSchemaType) => {
+  async function onSubmit(data: LoginFormValues) {
+    setIsLoading(true)
+    setError(null)
+
     try {
-      await login(data.email, data.password);
-      toast({
-        title: 'Connexion réussie',
-        description: 'Bienvenue sur Shifa-Connect',
-      });
-      router.push(redirect);
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Erreur de connexion',
-        description: error instanceof Error ? error.message : 'Une erreur est survenue',
-      });
-    }
-  };
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      })
 
-  const handlePasswordReset = async () => {
-    if (!resetEmail) {
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: 'Veuillez entrer votre adresse email',
-      });
-      return;
-    }
-
-    setResetLoading(true);
-    try {
-      // Simulate password reset API call
-      const response = await fetch('/api/auth/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: resetEmail }),
-      });
-
-      if (response.ok) {
-        toast({
-          title: 'Email envoyé',
-          description: 'Si un compte existe avec cette adresse, vous recevrez un email de réinitialisation.',
-        });
-        setResetDialogOpen(false);
-        setResetEmail('');
-      } else {
-        throw new Error('Erreur lors de l\'envoi');
+      if (authError) {
+        if (authError.message === 'Invalid login credentials') {
+          setError('Email ou mot de passe incorrect.')
+        } else {
+          setError(authError.message)
+        }
+        return
       }
-    } catch {
-      toast({
-        variant: 'destructive',
-        title: 'Erreur',
-        description: 'Impossible d\'envoyer l\'email de réinitialisation',
-      });
+
+      toast.success('Connexion réussie !')
+      router.push(redirect)
+      router.refresh()
+    } catch (err) {
+      setError('Une erreur est survenue lors de la connexion.')
     } finally {
-      setResetLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
+
+  const handleForgotPassword = async () => {
+    const email = form.getValues('email')
+    if (!email || !z.string().email().safeParse(email).success) {
+      toast.error('Veuillez entrer une adresse email valide pour réinitialiser votre mot de passe.')
+      return
+    }
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      })
+      if (error) {
+        toast.error(error.message)
+      } else {
+        toast.success('Un email de réinitialisation a été envoyé.')
+      }
+    } catch (err) {
+      toast.error('Erreur lors de l\'envoi de l\'email.')
+    }
+  }
 
   return (
-    <>
-      <CardHeader className="text-center pb-4">
-        <div className="flex justify-center mb-4">
-          <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10">
-            <Stethoscope className="w-6 h-6 text-primary" />
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+      <Card className="w-full max-w-md shadow-lg border-primary/10">
+        <CardHeader className="space-y-1 text-center">
+          <div className="flex justify-center mb-4">
+            <div className="rounded-full bg-primary/10 p-3">
+              <Stethoscope className="h-8 w-8 text-primary" />
+            </div>
           </div>
-        </div>
-        <CardTitle
-          className="text-2xl font-bold"
-          style={{ color: '#1B4F72' }}
-        >
-          Connexion
-        </CardTitle>
-        <CardDescription className="text-base">
-          Connectez-vous à votre cabinet médical
-        </CardDescription>
-      </CardHeader>
-
-      <CardContent>
-        <Form {...form}>
+          <CardTitle className="text-2xl font-bold text-slate-900">Shifa-Connect</CardTitle>
+          <CardDescription className="text-slate-500 font-medium">
+            الشفاء كونيكت — Connecté à votre pratique
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Email Field */}
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Adresse email</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        {...field}
-                        type="email"
-                        placeholder="exemple@email.com"
-                        className="pl-10 h-11"
-                        disabled={isLoading}
-                      />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+            {error && (
+              <Alert variant="destructive" className="bg-destructive/10 border-destructive/20 text-destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="email">Email professionnel</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="docteur@exemple.dz"
+                disabled={isLoading}
+                {...form.register('email')}
+                className="focus-visible:ring-primary"
+              />
+              {form.formState.errors.email && (
+                <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>
               )}
-            />
-
-            {/* Password Field */}
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="flex items-center justify-between">
-                    <FormLabel>Mot de passe</FormLabel>
-                    <button
-                      type="button"
-                      onClick={() => setResetDialogOpen(true)}
-                      className="text-sm font-medium hover:underline"
-                      style={{ color: '#148F77' }}
-                    >
-                      Mot de passe oublié ?
-                    </button>
-                  </div>
-                  <FormControl>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        {...field}
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder="Votre mot de passe"
-                        className="pl-10 pr-10 h-11"
-                        disabled={isLoading}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                        tabIndex={-1}
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </button>
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Mot de passe</Label>
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  className="text-xs font-medium text-primary hover:underline"
+                >
+                  Mot de passe oublié?
+                </button>
+              </div>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  disabled={isLoading}
+                  {...form.register('password')}
+                  className="pr-10 focus-visible:ring-primary"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {form.formState.errors.password && (
+                <p className="text-xs text-destructive">{form.formState.errors.password.message}</p>
               )}
-            />
-
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              className="w-full h-11 text-white font-semibold text-base"
-              style={{ backgroundColor: '#1B4F72' }}
-              disabled={isLoading}
-            >
+            </div>
+            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-6" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -221,69 +168,16 @@ export default function LoginPage() {
               )}
             </Button>
           </form>
-        </Form>
-      </CardContent>
-
-      <CardFooter className="flex flex-col gap-4 pt-0">
-        <div className="text-center text-sm text-muted-foreground">
-          Pas encore de compte ?{' '}
-          <Link
-            href="/register"
-            className="font-semibold hover:underline"
-            style={{ color: '#148F77' }}
-          >
-            Créer un compte
-          </Link>
-        </div>
-      </CardFooter>
-
-      {/* Password Reset Dialog */}
-      <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <KeyRound className="h-5 w-5 text-primary" />
-              Réinitialiser le mot de passe
-            </DialogTitle>
-            <DialogDescription>
-              Entrez votre adresse email. Si un compte existe, vous recevrez un lien de réinitialisation.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <Input
-              type="email"
-              placeholder="votre@email.com"
-              value={resetEmail}
-              onChange={(e) => setResetEmail(e.target.value)}
-              className="h-11"
-            />
+        </CardContent>
+        <CardFooter className="flex flex-col space-y-4 border-t pt-6 bg-slate-50/50">
+          <div className="text-center text-sm text-slate-500">
+            Pas encore de compte?{' '}
+            <Link href="/register" className="font-semibold text-primary hover:underline">
+              S'inscrire gratuitement
+            </Link>
           </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setResetDialogOpen(false)}
-              disabled={resetLoading}
-            >
-              Annuler
-            </Button>
-            <Button
-              onClick={handlePasswordReset}
-              disabled={resetLoading}
-              className="text-white"
-              style={{ backgroundColor: '#1B4F72' }}
-            >
-              {resetLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Envoi...
-                </>
-              ) : (
-                'Envoyer'
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
+        </CardFooter>
+      </Card>
+    </div>
+  )
 }

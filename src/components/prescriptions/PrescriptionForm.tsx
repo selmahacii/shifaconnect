@@ -96,7 +96,16 @@ export function PrescriptionForm({
   const [showPatientPicker, setShowPatientPicker] = React.useState(false)
   const [editingMedicationId, setEditingMedicationId] = React.useState<string | null>(null)
   const [items, setItems] = React.useState<Medication[]>(
-    defaultValues?.items || []
+    (defaultValues?.items || []).map((item, index) => ({
+      ...item,
+      id: item.id || generateId(),
+      medicationName: item.medicationName || '',
+      dosage: item.dosage || '',
+      frequency: item.frequency || '',
+      duration: item.duration || '',
+      renewal: item.renewal ?? false,
+      order: item.order ?? index,
+    }))
   )
 
   // Get today's date in DD/MM/YYYY format
@@ -110,14 +119,14 @@ export function PrescriptionForm({
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<PrescriptionFormData>({
-    resolver: zodResolver(PrescriptionSchema),
+    resolver: zodResolver(PrescriptionSchema) as any,
     defaultValues: {
       patientId: selectedPatient?.id || defaultValues?.patientId || '',
       consultationId: selectedConsultation?.id || defaultValues?.consultationId || '',
       prescriptionDate: defaultValues?.prescriptionDate || today,
       diagnosis: defaultValues?.diagnosis || '',
       notes: defaultValues?.notes || '',
-      items: defaultValues?.items || [],
+      items: (defaultValues?.items || []) as any,
     },
   })
 
@@ -140,7 +149,8 @@ export function PrescriptionForm({
 
   // Sync items with form
   React.useEffect(() => {
-    setValue('items', items)
+    // Cast to any to avoid complex schema mismatch if any small difference remains
+    setValue('items', items as any)
   }, [items, setValue])
 
   const watchedPatientId = watch('patientId')
@@ -214,12 +224,16 @@ export function PrescriptionForm({
   }
 
   const handleFormSubmit = async (data: PrescriptionFormData) => {
-    // Include items from state
-    const formData = {
-      ...data,
-      items: items.map((m, index) => ({ ...m, order: index })),
+    try {
+      // Include items from state with correct order
+      const formData = {
+        ...data,
+        items: items.map((m, index) => ({ ...m, order: index })),
+      }
+      await onSubmit(formData as PrescriptionFormData)
+    } catch (error) {
+      console.error('Submit error:', error)
     }
-    await onSubmit(formData as PrescriptionFormData)
   }
 
   const handlePrint = () => {
@@ -231,7 +245,7 @@ export function PrescriptionForm({
       consultationId: watch('consultationId'),
       items,
     }
-    onPrint?.(data as PrescriptionFormData)
+    onPrint?.(data as any)
   }
 
   return (

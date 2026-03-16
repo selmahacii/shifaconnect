@@ -1,5 +1,10 @@
 import { db } from '../../src/lib/db';
 import bcrypt from 'bcrypt';
+import * as dotenv from 'dotenv';
+import path from 'path';
+
+// Load environment variables from .env file
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
 async function globalSetup() {
   const email = 'doctor@test.dz';

@@ -61,8 +61,8 @@ export interface Medication {
   quantity?: string // Changed to string for flexibility like "1 boîte", "2 flacons"
   instructions?: string
   instructionsAr?: string
-  renewal?: boolean // Renouvellement autorisé
-  order?: number
+  renewal: boolean // Renouvellement autorisé
+  order: number
 }
 
 interface MedicationItemProps {
