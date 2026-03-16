@@ -52,7 +52,7 @@ const defaultActions: QuickAction[] = [
     label: 'Nouveau patient',
     description: 'Enregistrer un nouveau patient',
     icon: UserPlus,
-    href: '/patients/new',
+    href: '/dashboard/patients/new',
     color: {
       bg: 'bg-[#148F77]/10',
       icon: 'text-[#148F77]',
@@ -64,7 +64,7 @@ const defaultActions: QuickAction[] = [
     label: 'Nouvelle consultation',
     description: 'Démarrer une consultation',
     icon: Stethoscope,
-    href: '/consultations',
+    href: '/dashboard/patients',
     color: {
       bg: 'bg-[#1B4F72]/10',
       icon: 'text-[#1B4F72]',
@@ -76,7 +76,7 @@ const defaultActions: QuickAction[] = [
     label: 'Nouveau rendez-vous',
     description: 'Planifier un rendez-vous',
     icon: CalendarPlus,
-    href: '/agenda',
+    href: '/dashboard/agenda',
     color: {
       bg: 'bg-[#F39C12]/10',
       icon: 'text-[#F39C12]',
@@ -148,7 +148,7 @@ export function QuickActions({ actions = defaultActions, className }: QuickActio
 
   const handlePatientSelect = (patientId: string) => {
     setShowPatientSearch(false)
-    router.push(`/consultations?new=true&patientId=${patientId}`)
+    router.push(`/dashboard/patients/${patientId}?startConsultation=true`)
   }
 
   return (
@@ -248,7 +248,7 @@ export function QuickActions({ actions = defaultActions, className }: QuickActio
               Annuler
             </Button>
             <Button asChild className="bg-[#148F77] hover:bg-[#148F77]/90">
-              <Link href="/patients/new">
+              <Link href="/dashboard/patients/new">
                 <UserPlus className="h-4 w-4 mr-2" />
                 Nouveau patient
               </Link>

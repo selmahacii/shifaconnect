@@ -65,7 +65,7 @@ export function RecentPatientsCard({
             Patients récents
           </CardTitle>
           <Button variant="ghost" size="sm" asChild>
-            <Link href="/patients" className="text-[#1B4F72]">
+            <Link href="/dashboard/patients" className="text-[#1B4F72]">
               Voir tout
               <ArrowRight className="h-4 w-4 ml-1" />
             </Link>
@@ -80,7 +80,7 @@ export function RecentPatientsCard({
               Aucun patient récent
             </p>
             <Button variant="outline" size="sm" className="mt-4" asChild>
-              <Link href="/patients/new">
+              <Link href="/dashboard/patients/new">
                 Ajouter un patient
               </Link>
             </Button>
@@ -106,7 +106,7 @@ export function RecentPatientsCard({
                   {/* Patient Info */}
                   <div className="flex-1 min-w-0">
                     <Link
-                      href={`/patients/${patient.id}`}
+                      href={`/dashboard/patients/${patient.id}`}
                       className="font-medium text-sm hover:text-[#1B4F72] transition-colors"
                     >
                       {patient.firstName} {patient.lastName}
@@ -141,7 +141,7 @@ export function RecentPatientsCard({
                     className="bg-[#148F77] hover:bg-[#148F77]/90 flex-shrink-0"
                     asChild
                   >
-                    <Link href={`/consultations?new=true&patientId=${patient.id}`}>
+                    <Link href={`/dashboard/patients/${patient.id}?startConsultation=true`}>
                       <Stethoscope className="h-4 w-4 mr-1" />
                       Consulter
                     </Link>
