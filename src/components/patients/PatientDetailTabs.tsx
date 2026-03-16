@@ -13,7 +13,8 @@ import {
   Download,
   Eye,
   Plus,
-  Stethoscope
+  Stethoscope,
+  ChevronRight
 } from 'lucide-react'
 import { 
   Tabs, 
@@ -28,6 +29,7 @@ import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { ConsultationModal } from '@/components/consultations/ConsultationModal'
 
 interface PatientDetailTabsProps {
   patient: any
@@ -142,14 +144,18 @@ export function PatientDetailTabs({ patient }: PatientDetailTabsProps) {
       {/* TAB 2: CONSULTATIONS HISTORY */}
       <TabsContent value="history" className="mt-6">
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
+           <div className="flex justify-between items-center">
             <h3 className="text-lg font-bold text-slate-800">Historique des visites</h3>
-            <Button asChild size="sm" className="bg-[#1B4F72]">
-              <Link href={`/dashboard/consultations/new?patientId=${patient.id}`}>
-                <Plus className="h-4 w-4 mr-2" />
-                Nouvelle consultation
-              </Link>
-            </Button>
+            <ConsultationModal 
+              patientId={patient.id} 
+              patientName={`${patient.first_name} ${patient.last_name}`}
+              trigger={
+                <Button size="sm" className="bg-[#1B4F72]">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nouvelle consultation
+                </Button>
+              }
+            />
           </div>
 
           <div className="space-y-4">
@@ -165,9 +171,9 @@ export function PatientDetailTabs({ patient }: PatientDetailTabsProps) {
                         </div>
                         <div>
                           <p className="font-bold text-slate-900">
-                            {format(new Date(c.consultation_date), 'dd MMMM yyyy', { locale: fr })}
+                            {format(new Date(c.consultation_date || c.created_at), 'dd MMMM yyyy', { locale: fr })}
                           </p>
-                          <p className="text-sm text-slate-500 font-medium">Motif: {c.motif || c.chief_complaint || 'N/A'}</p>
+                          <p className="text-sm text-slate-500 font-medium">Motif: {c.chief_complaint || c.motif || 'N/A'}</p>
                           {c.diagnosis && (
                             <div className="mt-2 flex items-center gap-2">
                               <Badge variant="outline" className="text-[10px] uppercase tracking-wider font-bold">Diagnostic</Badge>
@@ -315,24 +321,5 @@ export function PatientDetailTabs({ patient }: PatientDetailTabsProps) {
         </div>
       </TabsContent>
     </Tabs>
-  )
-}
-
-function ChevronRight(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="m9 18 6-6-6-6" />
-    </svg>
   )
 }

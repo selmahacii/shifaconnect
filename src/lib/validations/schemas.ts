@@ -244,13 +244,13 @@ export const ConsultationSchema = z.object({
   symptoms: z.string().optional(),
   
   // Examen clinique (Constantes)
-  systolicBP: z.number().optional().nullable(),
-  diastolicBP: z.number().optional().nullable(),
-  heartRate: z.number().optional().nullable(),
-  temperature: z.number().optional().nullable(),
-  weight: z.number().optional().nullable(),
-  height: z.number().optional().nullable(),
-  oxygenSaturation: z.number().optional().nullable(),
+  systolicBP: z.coerce.number().optional(),
+  diastolicBP: z.coerce.number().optional(),
+  heartRate: z.coerce.number().optional(),
+  temperature: z.coerce.number().optional(),
+  weight: z.coerce.number().optional(),
+  height: z.coerce.number().optional(),
+  oxygenSaturation: z.coerce.number().optional(),
   
   // Diagnostic
   diagnosis: z.string().min(1, 'Le diagnostic est requis'),
@@ -258,13 +258,13 @@ export const ConsultationSchema = z.object({
   clinicalNotes: z.string().optional(),
   
   // Suivi
-  followUpDate: z.string().optional().nullable(),
+  followUpDate: z.string().optional(),
   followUpNotes: z.string().optional(),
   
   // UI Actions (Quick checkboxes)
-  createPrescription: z.boolean().default(false),
-  scheduleFollowUp: z.boolean().default(false),
-  uploadLabResult: z.boolean().default(false),
+  createPrescription: z.boolean().default(false).optional(),
+  scheduleFollowUp: z.boolean().default(false).optional(),
+  uploadLabResult: z.boolean().default(false).optional(),
 });
 
 export type ConsultationSchemaType = z.infer<typeof ConsultationSchema>;

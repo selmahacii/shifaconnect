@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { PatientDetailTabs } from '../../../../components/patients/PatientDetailTabs'
+import { ConsultationModal } from '@/components/consultations/ConsultationModal'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
@@ -113,12 +114,16 @@ export default async function PatientDetailPage({ params }: { params: { id: stri
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <Button asChild className="bg-white text-[#1B4F72] hover:bg-white/90">
-                <Link href={`/dashboard/consultations/new?patientId=${id}`}>
-                  <Stethoscope className="mr-2 h-4 w-4" />
-                  Nouvelle consultation
-                </Link>
-              </Button>
+              <ConsultationModal 
+                patientId={id} 
+                patientName={`${patient.first_name} ${patient.last_name}`}
+                trigger={
+                  <Button className="bg-white text-[#1B4F72] hover:bg-white/90">
+                    <Stethoscope className="mr-2 h-4 w-4" />
+                    Nouvelle consultation
+                  </Button>
+                }
+              />
               <Button asChild variant="secondary" className="bg-white/10 text-white hover:bg-white/20 border-white/20">
                 <Link href={`/dashboard/agenda/new?patientId=${id}`}>
                   <Calendar className="mr-2 h-4 w-4" />
