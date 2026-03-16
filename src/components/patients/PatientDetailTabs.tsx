@@ -33,9 +33,19 @@ import { ConsultationModal } from '@/components/consultations/ConsultationModal'
 
 interface PatientDetailTabsProps {
   patient: any
+  startConsultation?: boolean
+  appointmentId?: string
 }
 
-export function PatientDetailTabs({ patient }: PatientDetailTabsProps) {
+export function PatientDetailTabs({ patient, startConsultation, appointmentId }: PatientDetailTabsProps) {
+  const [isConsultationModalOpen, setIsConsultationModalOpen] = React.useState(false)
+
+  React.useEffect(() => {
+    if (startConsultation) {
+      setIsConsultationModalOpen(true)
+    }
+  }, [startConsultation])
+
   return (
     <Tabs defaultValue="summary" className="w-full">
       <TabsList className="bg-white p-1 h-auto flex-wrap md:flex-nowrap border">
@@ -149,8 +159,11 @@ export function PatientDetailTabs({ patient }: PatientDetailTabsProps) {
             <ConsultationModal 
               patientId={patient.id} 
               patientName={`${patient.first_name} ${patient.last_name}`}
+              appointmentId={appointmentId}
+              open={isConsultationModalOpen}
+              onOpenChange={setIsConsultationModalOpen}
               trigger={
-                <Button size="sm" className="bg-[#1B4F72]">
+                <Button size="sm" className="bg-[#1B4F72]" onClick={() => setIsConsultationModalOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
                   Nouvelle consultation
                 </Button>

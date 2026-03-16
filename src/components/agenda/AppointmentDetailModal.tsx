@@ -48,9 +48,8 @@ export function AppointmentDetailModal({ open, onOpenChange, appointment, onSucc
   const updateStatus = async (newStatus: string) => {
     setIsLoading(true)
     try {
-      const { error } = await supabase
-        .from('appointments')
-        .update({ status: newStatus } as any)
+      const { error } = await (supabase.from('appointments') as any)
+        .update({ status: newStatus })
         .eq('id', appointment.id)
 
       if (error) throw error
@@ -68,8 +67,7 @@ export function AppointmentDetailModal({ open, onOpenChange, appointment, onSucc
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce rendez-vous ?')) return
     setIsLoading(true)
     try {
-      const { error } = await supabase
-        .from('appointments')
+      const { error } = await (supabase.from('appointments') as any)
         .delete()
         .eq('id', appointment.id)
 

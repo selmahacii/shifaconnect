@@ -48,11 +48,24 @@ import { createClient } from '@/lib/supabase/client'
 interface ConsultationModalProps {
   patientId: string
   patientName: string
+  appointmentId?: string
   trigger?: React.ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
-export function ConsultationModal({ patientId, patientName, trigger }: ConsultationModalProps) {
-  const [open, setOpen] = React.useState(false)
+export function ConsultationModal({ 
+  patientId, 
+  patientName, 
+  appointmentId,
+  trigger,
+  open: externalOpen,
+  onOpenChange: setExternalOpen 
+}: ConsultationModalProps) {
+  const [internalOpen, setInternalOpen] = React.useState(false)
+  const open = externalOpen !== undefined ? externalOpen : internalOpen
+  const setOpen = setExternalOpen || setInternalOpen
+
   const [isLoading, setIsLoading] = React.useState(false)
   const router = useRouter()
   const supabase = createClient()
@@ -129,6 +142,13 @@ export function ConsultationModal({ patientId, patientName, trigger }: Consultat
         .single()
 
       if (error) throw error
+
+      // If started from an appointment, mark it as completed
+      if (appointmentId) {
+        await (supabase.from('appointments') as any)
+          .update({ status: 'COMPLETED' })
+          .eq('id', appointmentId)
+      }
 
       toast.success('Consultation enregistrée avec succès')
       setOpen(false)

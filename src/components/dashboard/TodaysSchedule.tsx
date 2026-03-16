@@ -65,8 +65,7 @@ export function TodaysSchedule({ appointments: initialAppointments, className }:
   }, [initialAppointments])
 
   const updateStatus = async (id: string, newStatus: string) => {
-    const { error } = await supabase
-      .from('appointments')
+    const { error } = await (supabase.from('appointments') as any)
       .update({ status: newStatus })
       .eq('id', id)
     
