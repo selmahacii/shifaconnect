@@ -45,17 +45,19 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+        }),
       })
 
-      if (authError) {
-        if (authError.message === 'Invalid login credentials') {
-          setError('Email ou mot de passe incorrect.')
-        } else {
-          setError(authError.message)
-        }
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        setError(result.error || 'Email ou mot de passe incorrect.')
         return
       }
 
