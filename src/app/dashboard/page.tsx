@@ -1,7 +1,7 @@
 
 import * as React from 'react'
+import { StatsCard } from '@/components/dashboard/StatsCard'
 import { 
-  StatsCard, 
   QuickActions, 
   TodaysSchedule, 
   ConsultationsChart, 
@@ -60,7 +60,7 @@ async function getDashboardData() {
   const remainingAppointments = appointments.filter(a => a.appointment_time >= currentTimeStr && a.status !== 'CANCELLED' && a.status !== 'COMPLETED').length
 
   // Process Last 6 Months Chart
-  const consultationsByMonth = []
+  const consultationsByMonth: any[] = []
   for (let i = 5; i >= 0; i--) {
     const monthDate = subMonths(now, i)
     const monthName = format(monthDate, 'MMM', { locale: fr })
@@ -154,19 +154,19 @@ export default async function DashboardPage() {
         <StatsCard
           title="Patients totaux"
           value={stats.totalPatients}
-          icon={Users}
+          icon={<Users className="h-5 w-5" />}
           variant="primary"
         />
         <StatsCard
           title="Consultations ce mois-ci"
           value={stats.monthConsultations}
-          icon={Stethoscope}
+          icon={<Stethoscope className="h-5 w-5" />}
           variant="secondary"
         />
         <StatsCard
           title="Rendez-vous aujourd'hui"
           value={stats.todaysAppointments.total}
-          icon={Calendar}
+          icon={<Calendar className="h-5 w-5" />}
           variant="accent"
           trend={{
             value: stats.todaysAppointments.remaining,
@@ -177,7 +177,7 @@ export default async function DashboardPage() {
         <StatsCard
           title="Ordonnances ce mois-ci"
           value={stats.monthPrescriptions}
-          icon={FileText}
+          icon={<FileText className="h-5 w-5" />}
           variant="success"
         />
       </div>

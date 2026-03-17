@@ -1,3 +1,5 @@
+'use client'
+
 import * as React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
@@ -8,7 +10,7 @@ export type StatsCardVariant = 'primary' | 'secondary' | 'accent' | 'success' | 
 export interface StatsCardProps {
   title: string
   value: string | number
-  icon?: LucideIcon
+  icon?: React.ReactNode
   trend?: {
     value: number
     label?: string
@@ -50,7 +52,7 @@ const variantStyles: Record<StatsCardVariant, { bg: string; icon: string; text: 
 export function StatsCard({
   title,
   value,
-  icon: Icon,
+  icon,
   trend,
   variant = 'primary',
   className,
@@ -71,9 +73,9 @@ export function StatsCard({
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}
         </CardTitle>
-        {Icon && (
-          <div className={cn('rounded-lg p-2', styles.bg)}>
-            <Icon className={cn('h-5 w-5', styles.icon)} />
+        {icon && (
+          <div className={cn('rounded-lg p-2', styles.bg, styles.icon)}>
+            {icon}
           </div>
         )}
       </CardHeader>
