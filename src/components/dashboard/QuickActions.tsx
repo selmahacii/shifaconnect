@@ -18,6 +18,7 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import {
@@ -28,6 +29,7 @@ import {
   ArrowRight,
   Search,
   Users,
+  Activity,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -153,14 +155,15 @@ export function QuickActions({ actions = defaultActions, className }: QuickActio
 
   return (
     <>
-      <Card className={cn('h-full', className)}>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg font-semibold">
+      <Card className={cn('h-full border-none shadow-md overflow-hidden bg-white', className)}>
+        <CardHeader className="pb-4 border-b">
+          <CardTitle className="text-lg font-bold flex items-center gap-2">
+            <Activity className="h-5 w-5 text-[#1B4F72]" />
             Actions rapides
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-0">
-          <div className="grid grid-cols-2 gap-3">
+        <CardContent className="p-6">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {actions.map((action) => {
               const Icon = action.icon
               return (
@@ -168,24 +171,25 @@ export function QuickActions({ actions = defaultActions, className }: QuickActio
                   key={action.id}
                   onClick={() => handleActionClick(action)}
                   className={cn(
-                    'flex flex-col items-center justify-center gap-2 p-4 rounded-lg border transition-all duration-200 group',
-                    action.color.bg,
+                    'flex flex-col items-center justify-center gap-3 p-4 rounded-2xl border border-slate-100 transition-all duration-300 group relative overflow-hidden',
                     action.color.hover,
-                    'border-transparent hover:border-transparent cursor-pointer'
+                    'cursor-pointer bg-slate-50/50 hover:bg-white hover:shadow-lg hover:-translate-y-1'
                   )}
                 >
                   <div className={cn(
-                    'h-12 w-12 rounded-lg flex items-center justify-center transition-transform group-hover:scale-110',
+                    'h-14 w-14 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-inner',
                     action.color.bg
                   )}>
-                    <Icon className={cn('h-6 w-6', action.color.icon)} />
+                    <Icon className={cn('h-7 w-7 transition-all duration-300 group-hover:rotate-12', action.color.icon)} />
                   </div>
                   <div className="text-center">
-                    <p className="font-semibold text-sm">{action.label}</p>
-                    <p className="text-xs text-muted-foreground hidden sm:block">
+                    <p className="font-bold text-sm text-slate-900">{action.label}</p>
+                    <p className="text-[10px] text-slate-500 font-medium hidden sm:block mt-0.5">
                       {action.description}
                     </p>
                   </div>
+                  {/* Subtle hover indicator */}
+                  <div className={cn("absolute bottom-0 left-0 h-1 w-0 transition-all duration-500 group-hover:w-full opacity-50", action.color.bg.replace('/10', ''))} />
                 </button>
               )
             })}

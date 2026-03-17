@@ -16,7 +16,8 @@ import {
 import { format, startOfMonth, endOfMonth } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
-import { createClient } from '@/lib/supabase/server'
+import { db } from '@/lib/db'
+import { getCurrentDoctorId } from '@/lib/auth/server'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -31,44 +32,44 @@ import {
 } from '@/components/ui/table'
 
 async function getPrescriptions(filter: 'all' | 'month' = 'all') {
-  const supabase = await createClient()
-  
-  let query = (supabase
-    .from('prescriptions')
-    .select(`
-      *,
-      patient:patients(*)
-    `) as any)
-    .order('created_at', { ascending: false })
+  const doctorId = await getCurrentDoctorId()
+  if (!doctorId) return []
 
+  const where: any = { doctorId }
+  
   if (filter === 'month') {
-    const start = startOfMonth(new Date()).toISOString()
-    const end = endOfMonth(new Date()).toISOString()
-    query = (query as any).gte('created_at', start).lte('created_at', end)
+    const start = startOfMonth(new Date())
+    const end = endOfMonth(new Date())
+    where.createdAt = { gte: start, lte: end }
   }
 
-  const { data: prescriptions, error } = await query
-
-  if (error) {
+  try {
+    const prescriptions = await db.prescription.findMany({
+      where,
+      include: {
+        patient: true,
+        items: true
+      },
+      orderBy: { createdAt: 'desc' }
+    })
+    return prescriptions
+  } catch (error) {
     console.error('Error fetching prescriptions:', error)
     return []
   }
-
-  return prescriptions || []
 }
 
-export default async function PrescriptionsListPage({ 
-  searchParams 
-}: { 
-  searchParams: { filter?: string } 
+export default async function PrescriptionsListPage(props: { 
+  searchParams: Promise<{ filter?: string }> 
 }) {
+  const searchParams = await props.searchParams
   const filter = (searchParams.filter as 'all' | 'month') || 'all'
   const prescriptions = await getPrescriptions(filter)
   const today = new Date()
 
   // Stats
-  const monthCount = prescriptions.filter((p: any) => {
-    const d = new Date(p.created_at)
+  const monthCount = prescriptions.filter((p) => {
+    const d = new Date(p.createdAt)
     return d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear()
   }).length
 
@@ -111,7 +112,7 @@ export default async function PrescriptionsListPage({
         />
         <StatsCard 
           title="Patients Actifs" 
-          value={new Set(prescriptions.map((p: any) => p.patient_id)).size} 
+          value={new Set(prescriptions.map((p) => p.patientId)).size} 
           icon={<User className="h-6 w-6 text-purple-600" />}
           description="Patients avec ordonnance"
         />
@@ -146,10 +147,10 @@ export default async function PrescriptionsListPage({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {prescriptions.map((p: any) => (
+                {prescriptions.map((p) => (
                   <TableRow key={p.id} className="hover:bg-slate-50 transition-colors">
                     <TableCell className="text-slate-600">
-                      {format(new Date(p.created_at), 'dd/MM/yyyy')}
+                      {format(new Date(p.createdAt), 'dd/MM/yyyy')}
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className="font-mono text-[10px] uppercase">
@@ -159,7 +160,7 @@ export default async function PrescriptionsListPage({
                     <TableCell>
                       <div className="flex flex-col">
                         <span className="font-bold text-slate-900">
-                          {p.patient.last_name} {p.patient.first_name}
+                          {p.patient.lastName} {p.patient.firstName}
                         </span>
                         <span className="text-[10px] text-slate-500">
                           NIN: {p.patient.nin || '---'}
@@ -169,7 +170,7 @@ export default async function PrescriptionsListPage({
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <Badge className="bg-blue-50 text-[#1B4F72] border-blue-100">
-                          {Array.isArray(p.medications) ? p.medications.length : 0} méd.
+                          {p.items.length} méd.
                         </Badge>
                       </div>
                     </TableCell>
@@ -180,13 +181,6 @@ export default async function PrescriptionsListPage({
                             <Eye className="h-4 w-4" />
                           </Link>
                         </Button>
-                        {p.pdf_url && (
-                          <Button asChild variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-[#1B4F72]">
-                            <a href={p.pdf_url} target="_blank" rel="noopener noreferrer">
-                              <Download className="h-4 w-4" />
-                            </a>
-                          </Button>
-                        )}
                       </div>
                     </TableCell>
                   </TableRow>

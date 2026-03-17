@@ -14,10 +14,11 @@ import {
   TrendingUp,
   Filter
 } from 'lucide-react'
-import { format, startOfDay, endOfDay } from 'date-fns'
+import { format, startOfDay, endOfDay, parse } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
-import { createClient } from '@/lib/supabase/server'
+import { db } from '@/lib/db'
+import { getCurrentDoctorId } from '@/lib/auth/server'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -32,27 +33,34 @@ import {
 } from '@/components/ui/table'
 
 async function getTodayConsultations() {
-  const supabase = await createClient()
+  const doctorId = await getCurrentDoctorId()
+  if (!doctorId) return []
+
   const today = new Date()
-  const start = startOfDay(today).toISOString()
-  const end = endOfDay(today).toISOString()
+  const start = startOfDay(today)
+  const end = endOfDay(today)
 
-  const { data: consultations, error } = await (supabase
-    .from('consultations')
-    .select(`
-      *,
-      patient:patients(*)
-    `)
-    .gte('created_at', start)
-    .lte('created_at', end)
-    .order('created_at', { ascending: false }) as any)
-
-  if (error) {
+  try {
+    const consultations = await db.consultation.findMany({
+      where: {
+        doctorId,
+        createdAt: {
+          gte: start,
+          lte: end
+        }
+      },
+      include: {
+        patient: true
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    })
+    return consultations
+  } catch (error) {
     console.error('Error fetching today consultations:', error)
     return []
   }
-
-  return consultations || []
 }
 
 export default async function ConsultationsPage() {
@@ -61,16 +69,29 @@ export default async function ConsultationsPage() {
 
   // Calculate Stats
   const total = consultations.length
-  const maleCount = consultations.filter((c: any) => c.patient.gender === 'M').length
-  const femaleCount = consultations.filter((c: any) => c.patient.gender === 'F').length
+  const maleCount = consultations.filter((c: any) => c.patient.gender === 'MALE').length
+  const femaleCount = consultations.filter((c: any) => c.patient.gender === 'FEMALE').length
   
   const bmiSum = consultations.reduce((acc: number, curr: any) => {
-    if (curr.weight && curr.height) {
-      return acc + (curr.weight / ((curr.height / 100) ** 2))
+    if (curr.vitals) {
+      try {
+        const vitals = JSON.parse(curr.vitals)
+        if (vitals.weight && vitals.height) {
+          return acc + (vitals.weight / ((vitals.height / 100) ** 2))
+        }
+      } catch (e) {}
     }
     return acc
   }, 0)
-  const bmiCount = consultations.filter((c: any) => c.weight && c.height).length
+  const bmiCount = consultations.filter((c: any) => {
+      if (c.vitals) {
+          try {
+              const v = JSON.parse(c.vitals)
+              return v.weight && v.height
+          } catch(e) {}
+      }
+      return false
+  }).length
   const avgBmi = bmiCount > 0 ? (bmiSum / bmiCount).toFixed(1) : '--'
 
   return (
@@ -160,21 +181,21 @@ export default async function ConsultationsPage() {
                 {consultations.map((c: any) => (
                   <TableRow key={c.id} className="hover:bg-slate-50 transition-colors cursor-pointer">
                     <TableCell className="font-medium text-slate-600">
-                      {format(new Date(c.created_at), 'HH:mm')}
+                      {format(new Date(c.createdAt), 'HH:mm')}
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col">
                         <span className="font-bold text-slate-900">
-                          {c.patient.last_name} {c.patient.first_name}
+                          {c.patient.lastName} {c.patient.firstName}
                         </span>
                         <span className="text-xs text-slate-500">
-                          {c.patient.gender === 'M' ? 'Homme' : 'Femme'} • {calculateAge(c.patient.date_of_birth)} ans
+                          {c.patient.gender === 'MALE' ? 'Homme' : 'Femme'} • {calculateAge(c.patient.dateOfBirth)} ans
                         </span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="max-w-[200px] truncate" title={c.chief_complaint}>
-                        {c.chief_complaint}
+                      <div className="max-w-[200px] truncate" title={c.chiefComplaint}>
+                        {c.chiefComplaint}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -249,8 +270,14 @@ function StatsCard({ title, value, icon, description, color }: {
 }
 
 function calculateAge(birthDate: string) {
+  if (!birthDate) return 0
   const today = new Date()
-  const birth = new Date(birthDate)
+  let birth: Date
+  if (birthDate.includes('/')) {
+      birth = parse(birthDate, 'dd/MM/yyyy', new Date())
+  } else {
+      birth = new Date(birthDate)
+  }
   let age = today.getFullYear() - birth.getFullYear()
   const m = today.getMonth() - birth.getMonth()
   if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
@@ -258,6 +285,7 @@ function calculateAge(birthDate: string) {
   }
   return age
 }
+
 
 function cn(...classes: any[]) {
   return classes.filter(Boolean).join(' ')

@@ -36,21 +36,20 @@ export function ConsultationsChart({
   const average = data.length > 0 ? Math.round(total / data.length) : 0
 
   return (
-    <Card className={cn('h-full', className)}>
-      <CardHeader className="pb-2">
+    <Card className={cn('h-full border-none shadow-md rounded-2xl overflow-hidden', className)}>
+      <CardHeader className="pb-2 border-b border-slate-50">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
+            <CardTitle className="text-base font-black flex items-center gap-2 text-slate-900">
               <BarChart3 className="h-4 w-4 text-[#1B4F72]" />
               Consultations par mois
             </CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">
-              Moyenne: {average} consultations/mois
+            <p className="text-[10px] uppercase font-bold text-slate-400 mt-1 tracking-wider">
+              Moyenne: {average} par mois
             </p>
           </div>
           <div className="text-right">
-            <span className="text-2xl font-bold text-[#1B4F72]">{total}</span>
-            <p className="text-xs text-muted-foreground">6 derniers mois</p>
+            <span className="text-2xl font-black text-[#1B4F72]">{total}</span>
           </div>
         </div>
       </CardHeader>

@@ -4,6 +4,7 @@ import * as React from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import {
   User,
@@ -11,6 +12,7 @@ import {
   Phone,
   Clock,
   ArrowRight,
+  Activity,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -86,18 +88,18 @@ export function RecentPatientsCard({
             </Button>
           </div>
         ) : (
-          <ScrollArea className="h-[320px] pr-4">
-            <div className="space-y-3">
+          <ScrollArea className="h-[400px] pr-4">
+            <div className="space-y-4">
               {patients.map((patient) => (
                 <div
                   key={patient.id}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors group"
+                  className="flex items-center gap-4 p-4 rounded-2xl border border-slate-50 transition-all duration-300 hover:bg-slate-50 hover:shadow-sm group"
                 >
                   {/* Avatar */}
                   <div
                     className={cn(
-                      'h-10 w-10 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0',
-                      patient.gender === 'MALE' ? 'bg-[#1B4F72]' : 'bg-pink-500'
+                      'h-12 w-12 rounded-xl flex items-center justify-center text-white text-base font-bold flex-shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-110',
+                      patient.gender === 'MALE' ? 'bg-[#1B4F72]' : 'bg-[#D35400]'
                     )}
                   >
                     {patient.firstName[0]}{patient.lastName[0]}
@@ -105,45 +107,48 @@ export function RecentPatientsCard({
 
                   {/* Patient Info */}
                   <div className="flex-1 min-w-0">
-                    <Link
-                      href={`/dashboard/patients/${patient.id}`}
-                      className="font-medium text-sm hover:text-[#1B4F72] transition-colors"
-                    >
-                      {patient.firstName} {patient.lastName}
-                    </Link>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      <span>
-                        {calculateAge(patient.dateOfBirth)} ans
-                      </span>
+                    <div className="flex items-center justify-between gap-2">
+                       <Link
+                        href={`/dashboard/patients/${patient.id}`}
+                        className="font-bold text-slate-900 hover:text-[#1B4F72] transition-colors truncate"
+                      >
+                        {patient.firstName} {patient.lastName}
+                      </Link>
+                      <Badge variant="outline" className="text-[10px] uppercase font-bold text-slate-400 border-slate-200 px-1 py-0">
+                        {calculateAge(patient.dateOfBirth)} ANS
+                      </Badge>
+                    </div>
+                    
+                    <div className="flex items-center gap-3 mt-1 text-[11px] font-medium text-slate-500">
                       {patient.phone && (
                         <span className="flex items-center gap-1">
-                          <Phone className="h-3 w-3" />
+                          <Phone className="h-3 w-3 opacity-70" />
                           {patient.phone}
                         </span>
                       )}
+                      {patient.lastVisit && (
+                        <span className="flex items-center gap-1 text-[#148F77]">
+                          <Clock className="h-3 w-3 opacity-70" />
+                          {patient.lastVisit}
+                        </span>
+                      )}
                     </div>
+                    
                     {patient.lastComplaint && (
-                      <p className="text-xs text-muted-foreground truncate mt-0.5">
-                        {patient.lastComplaint}
-                      </p>
-                    )}
-                    {patient.lastVisit && (
-                      <p className="text-xs text-muted-foreground/70 flex items-center gap-1 mt-0.5">
-                        <Clock className="h-3 w-3" />
-                        Dernière visite: {patient.lastVisit}
+                      <p className="text-[11px] text-slate-400 truncate mt-1 italic">
+                        "{patient.lastComplaint}"
                       </p>
                     )}
                   </div>
 
                   {/* Quick Action Button */}
                   <Button
-                    size="sm"
-                    className="bg-[#148F77] hover:bg-[#148F77]/90 flex-shrink-0"
+                    size="icon"
+                    className="bg-[#148F77]/10 text-[#148F77] hover:bg-[#148F77] hover:text-white rounded-xl transition-all duration-300 opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0"
                     asChild
                   >
                     <Link href={`/dashboard/patients/${patient.id}?startConsultation=true`}>
-                      <Stethoscope className="h-4 w-4 mr-1" />
-                      Consulter
+                      <Stethoscope className="h-4 w-4" />
                     </Link>
                   </Button>
                 </div>

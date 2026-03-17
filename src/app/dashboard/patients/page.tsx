@@ -1,70 +1,54 @@
-import { createClient } from '@/lib/supabase/server'
+
+import { db } from '@/lib/db'
+import { getCurrentDoctorId } from '@/lib/auth/server'
 import { PatientListContent } from '@/components/patients/PatientListContent'
 import { redirect } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
 
 export default async function PatientsPage() {
-  const supabase = await createClient()
-
-  // Get current session
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
+  const doctorId = await getCurrentDoctorId()
+  
+  if (!doctorId) {
     redirect('/login')
   }
 
-  // Get doctor profile
-  const { data: doctor } = await supabase
-    .from('doctors')
-    .select('id')
-    .eq('auth_user_id', user.id)
-    .single()
+  try {
+    // Fetch patients with their consultations
+    const patientsRaw = await db.patient.findMany({
+      where: { doctorId },
+      include: {
+        consultations: {
+          select: { consultationDate: true },
+          orderBy: { createdAt: 'desc' }
+        }
+      },
+      orderBy: { lastName: 'asc' }
+    })
 
-  if (!doctor) {
-    redirect('/login')
-  }
-  const doctorId = (doctor as any).id
+    // Transform data for the UI
+    const patients = patientsRaw.map(p => {
+      const lastVisit = p.consultations.length > 0 ? p.consultations[0].consultationDate : null
 
-  // Fetch patients with their last consultation date
-  const { data: patientsData, error } = (await supabase
-    .from('patients')
-    .select(`
-      *,
-      consultations (
-        consultation_date
-      )
-    `)
-    .eq('doctor_id', doctorId)
-    .order('last_name', { ascending: true })) as any
+      return {
+        id: p.id,
+        first_name: p.firstName,
+        last_name: p.lastName,
+        first_name_ar: p.firstNameAr,
+        last_name_ar: p.lastNameAr,
+        date_of_birth: p.dateOfBirth,
+        phone: p.phone,
+        wilaya: p.wilaya,
+        gender: (p.gender === 'MALE' ? 'M' : 'F') as 'M' | 'F',
+        national_id: p.nin,
+        chifa_number: p.chifaNumber,
+        last_visit: lastVisit
+      }
+    })
 
-  if (error) {
+    return <PatientListContent initialPatients={patients} />
+  } catch (error) {
     console.error('Error fetching patients:', error)
+    return <div>Erreur lors du chargement des patients</div>
   }
-
-  // Transform data to get last_visit
-  const patients = (patientsData || []).map(p => {
-    const consultations = p.consultations as any[]
-    const lastVisit = consultations.length > 0 
-      ? consultations.reduce((latest, current) => 
-          new Date(current.consultation_date) > new Date(latest.consultation_date) ? current : latest
-        ).consultation_date 
-      : null
-
-    return {
-      id: p.id,
-      first_name: p.first_name,
-      last_name: p.last_name,
-      first_name_ar: p.first_name_ar,
-      last_name_ar: p.last_name_ar,
-      date_of_birth: p.date_of_birth,
-      phone: p.phone,
-      wilaya: p.wilaya,
-      gender: p.gender,
-      national_id: p.national_id,
-      chifa_number: p.chifa_number,
-      last_visit: lastVisit
-    }
-  })
-
-  return <PatientListContent initialPatients={patients} />
 }
