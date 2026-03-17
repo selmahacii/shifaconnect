@@ -7,7 +7,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 import { Stethoscope, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { useAuthStore } from '@/stores/auth-store'
+import { authClient } from '@/lib/auth/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -26,7 +27,8 @@ export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirect = searchParams.get('redirect') || '/dashboard'
-  const supabase = createClient()
+
+  const { login } = useAuthStore()
 
   const [isLoading, setIsLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
@@ -45,27 +47,12 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: data.email,
-          password: data.password,
-        }),
-      })
-
-      const result = await response.json()
-
-      if (!response.ok || !result.success) {
-        setError(result.error || 'Email ou mot de passe incorrect.')
-        return
-      }
-
+      await login(data.email, data.password)
       toast.success('Connexion réussie !')
       router.push(redirect)
       router.refresh()
-    } catch (err) {
-      setError('Une erreur est survenue lors de la connexion.')
+    } catch (err: any) {
+      setError(err.message || 'Email ou mot de passe incorrect.')
     } finally {
       setIsLoading(false)
     }
@@ -79,9 +66,7 @@ export default function LoginPage() {
     }
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      })
+      const { error } = await authClient.resetPasswordForEmail(email)
       if (error) {
         toast.error(error.message)
       } else {

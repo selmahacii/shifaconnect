@@ -15,9 +15,9 @@ import {
   User
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useAuthStore } from '@/stores/auth-store'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 
 interface NavItem {
@@ -37,22 +37,13 @@ const navItems: NavItem[] = [
 export function DashboardSidebar() {
   const pathname = usePathname()
   const router = useRouter()
-  const supabase = createClient()
+  const { user, logout } = useAuthStore()
   const [isCollapsed, setIsCollapsed] = React.useState(false)
-  const [userName, setUserName] = React.useState('Docteur')
 
-  React.useEffect(() => {
-    async function getUser() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        setUserName(user.user_metadata.full_name || 'Docteur')
-      }
-    }
-    getUser()
-  }, [supabase])
+  const userName = user?.name || 'Docteur'
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
+    await logout()
     toast.info('Déconnexion réussie')
     router.push('/login')
     router.refresh()

@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 import { Stethoscope, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { useAuthStore } from '@/stores/auth-store'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -42,7 +42,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>
 
 export default function RegisterPage() {
   const router = useRouter()
-  const supabase = createClient()
+  const { register } = useAuthStore()
 
   const [isLoading, setIsLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
@@ -66,46 +66,24 @@ export default function RegisterPage() {
     setError(null)
 
     try {
-      // 1. Sign up user in Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      await register({
+        name: data.fullName,
         email: data.email,
         password: data.password,
-        options: {
-          data: {
-            full_name: data.fullName,
-          },
-        },
+        confirmPassword: data.confirmPassword,
+        clinicName: data.clinicName,
+        wilaya: data.wilaya,
+        licenseNumber: data.licenseNumber,
       })
 
-      if (authError) {
-        setError(authError.message)
-        return
-      }
-
-      if (authData.user) {
-        // 2. Insert doctor profile
-        const { error: profileError } = await (supabase.from('doctors') as any).insert({
-          auth_user_id: authData.user.id,
-          full_name: data.fullName,
-          clinic_name: data.clinicName,
-          clinic_wilaya: data.wilaya,
-          license_number: data.licenseNumber,
-        })
-
-        if (profileError) {
-          setError(`Profil non créé: ${profileError.message}`)
-          return
-        }
-
-        setIsSuccess(true)
-        toast.success('Compte créé avec succès !')
-        setTimeout(() => {
-          router.push('/dashboard')
-          router.refresh()
-        }, 1500)
-      }
-    } catch (err) {
-      setError('Une erreur est survenue lors de l\'inscription.')
+      setIsSuccess(true)
+      toast.success('Compte créé avec succès !')
+      setTimeout(() => {
+        router.push('/dashboard')
+        router.refresh()
+      }, 1500)
+    } catch (err: any) {
+      setError(err.message || "Une erreur est survenue lors de l'inscription.")
     } finally {
       setIsLoading(false)
     }

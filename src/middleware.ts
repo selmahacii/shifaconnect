@@ -1,70 +1,44 @@
-import { createServerClient } from '@supabase/ssr'
+
 import { NextResponse, type NextRequest } from 'next/server'
-import { Database } from '@/lib/types/database'
 
+/**
+ * Shifa-Connect Middleware
+ * Handles session protection and redirection
+ */
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  })
-
-  const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set({ name, value, ...options }))
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
   const { pathname } = request.nextUrl
+  
+  // Get session token from cookie
+  const sessionToken = request.cookies.get('session_token')?.value
+  const isAuthenticated = !!sessionToken
 
-  // Protected routes: everything under /dashboard
-  const isDashboardRoute = pathname.startsWith('/dashboard')
-  // Auth routes: login and register
+  // Define route types
+  const isDashboardRoute = pathname.startsWith('/dashboard') || pathname.startsWith('/consultations')
   const isAuthRoute = pathname === '/login' || pathname === '/register'
+  const isRoot = pathname === '/'
 
-  // If user is not logged in and tries to access dashboard, redirect to login
-  if (isDashboardRoute && !user) {
+  // 1. Redirect to login if accessing dashboard without session
+  if (isDashboardRoute && !isAuthenticated) {
     const url = new URL('/login', request.url)
     url.searchParams.set('redirect', pathname)
     return NextResponse.redirect(url)
   }
 
-  // If user is logged in and tries to access auth pages, redirect to dashboard
-  if (isAuthRoute && user) {
+  // 2. Redirect to dashboard if logged in and accessing auth pages
+  if (isAuthRoute && isAuthenticated) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
-  // Root path handling
-  if (pathname === '/') {
-    if (user) {
+  // 3. Handle root path
+  if (isRoot) {
+    if (isAuthenticated) {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     } else {
       return NextResponse.redirect(new URL('/login', request.url))
     }
   }
 
-  return response
+  return NextResponse.next()
 }
 
 export const config = {
@@ -76,7 +50,8 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public folder
      * - fonts folder
+     * - api routes (handled individually)
      */
-    '/((?!_next/static|_next/image|favicon.ico|public/|fonts/).*)',
+    '/((?!_next/static|_next/image|favicon.ico|public/|fonts/|api/).*)',
   ],
 }
