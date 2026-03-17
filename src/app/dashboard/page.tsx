@@ -190,19 +190,25 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-700">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-6">
-        <div>
-          <h1 className="text-3xl font-black text-[#1B4F72] tracking-tight">Tableau de bord</h1>
-          <p className="text-slate-500 mt-1">
-            Bienvenue, Dr. {format(now, 'EEEE d MMMM yyyy', { locale: fr })}
-          </p>
+    <div className="space-y-12 animate-in fade-in duration-700 pb-12">
+      {/* Dynamic Header Section */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-slate-100">
+        <div className="space-y-1.5 px-1">
+            <h1 className="text-4xl font-black text-[#1B4F72] tracking-tighter italic uppercase">Mission Control</h1>
+            <p className="text-sm font-bold text-slate-400 uppercase tracking-[0.3em] flex items-center gap-2">
+                <Activity className="h-4 w-4 text-[#148F77] animate-pulse" />
+                Tableau de bord de votre cabinet
+            </p>
         </div>
-        <div className="flex items-center gap-3">
-          <Badge variant="outline" className="px-3 py-1 bg-white shadow-sm border-slate-200 text-[#1B4F72] font-semibold">
-            <Activity className="w-3.5 h-3.5 mr-1.5 text-[#148F77]" />
-            Système en ligne
-          </Badge>
+        
+        <div className="flex items-center gap-4 bg-white/50 backdrop-blur-sm p-3 rounded-3xl border border-slate-50 shadow-sm">
+            <div className="flex flex-col items-end mr-2">
+                <span className="text-xs font-black text-slate-800 uppercase tracking-widest">{format(now, 'EEEE d MMMM yyyy', { locale: fr })}</span>
+                <span className="text-[10px] font-bold text-[#148F77] uppercase mt-0.5 tracking-tighter">Sessión Active</span>
+            </div>
+            <Badge className="bg-[#148F77]/10 text-[#148F77] border-[#148F77]/20 font-black px-4 py-2 rounded-2xl text-[10px] uppercase tracking-widest">
+                En ligne
+            </Badge>
         </div>
       </div>
 
@@ -241,22 +247,58 @@ export default async function DashboardPage() {
         />
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-8">
-          <QuickActions />
-          
-          <div className="grid gap-6 md:grid-cols-2">
-            <ConsultationsChart data={stats.consultationsByMonth} />
-            <DiagnosticsChart data={stats.topDiagnostics} />
-          </div>
-          
-          <AgeDistributionChart data={stats.ageDistribution} />
+      {/* High-Level Monitoring Grid */}
+      <div className="grid gap-8 xl:grid-cols-3">
+        {/* Main Analytics Column */}
+        <div className="xl:col-span-2 space-y-12">
+          {/* Quick Actions at full width */}
+          <section>
+             <div className="flex items-center gap-3 mb-6">
+                <div className="h-2.5 w-2.5 rounded-full bg-[#148F77]" />
+                <h2 className="text-sm font-black text-slate-400 uppercase tracking-[0.3em]">Action Rapide</h2>
+            </div>
+            <QuickActions />
+          </section>
+
+          {/* Charts Row */}
+          <section>
+            <div className="flex items-center gap-3 mb-6">
+                <div className="h-2.5 w-2.5 rounded-full bg-[#1B4F72]" />
+                <h2 className="text-sm font-black text-slate-400 uppercase tracking-[0.3em]">Analyse de Flux</h2>
+            </div>
+            <div className="grid gap-6 md:grid-cols-2">
+                <ConsultationsChart data={stats.consultationsByMonth} />
+                <DiagnosticsChart data={stats.topDiagnostics} />
+            </div>
+          </section>
+
+          {/* Demographics at bottom of main column */}
+          <section>
+             <div className="flex items-center gap-3 mb-6">
+                <div className="h-2.5 w-2.5 rounded-full bg-[#F39C12]" />
+                <h2 className="text-sm font-black text-slate-400 uppercase tracking-[0.3em]">Démographie</h2>
+            </div>
+            <AgeDistributionChart data={stats.ageDistribution} className="xl:max-w-md" />
+          </section>
         </div>
 
-        <div className="space-y-8">
-          <TodaysSchedule appointments={stats.upcomingAppointments} />
-          <RecentPatientsCard patients={stats.recentPatients} />
+        {/* Sidebar Tracking Column */}
+        <div className="space-y-12">
+          <section>
+             <div className="flex items-center gap-3 mb-6">
+                <div className="h-2.5 w-2.5 rounded-full bg-[#1B4F72]" />
+                <h2 className="text-sm font-black text-slate-400 uppercase tracking-[0.3em]">Aujourd'hui</h2>
+            </div>
+            <TodaysSchedule initialAppointments={stats.upcomingAppointments} />
+          </section>
+
+          <section>
+             <div className="flex items-center gap-3 mb-6">
+                <div className="h-2.5 w-2.5 rounded-full bg-[#1B4F72]" />
+                <h2 className="text-sm font-black text-slate-400 uppercase tracking-[0.3em]">Activité Dossiers</h2>
+            </div>
+            <RecentPatientsCard patients={stats.recentPatients} />
+          </section>
         </div>
       </div>
     </div>

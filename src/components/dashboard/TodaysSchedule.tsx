@@ -46,12 +46,12 @@ export interface TodaysAppointment {
 }
 
 export interface TodaysScheduleProps {
-  appointments?: any[]
+  initialAppointments?: any[]
   className?: string
 }
 
-export function TodaysSchedule({ appointments: initialAppointments, className }: TodaysScheduleProps) {
-  const [appointments, setAppointments] = React.useState<any[]>(initialAppointments || [])
+export function TodaysSchedule({ initialAppointments = [], className }: TodaysScheduleProps) {
+  const [appointments, setAppointments] = React.useState<any[]>(initialAppointments)
   const [loading, setLoading] = React.useState(false)
 
   const refreshAppointments = async () => {
