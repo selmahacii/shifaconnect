@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   keywords: ["Shifa-Connect", "الشفاء كونيكت", "gestion médicale", "cabinet médical", "Algérie", "médecin généraliste", "ordonnance", "consultation"],
   authors: [{ name: "Shifa-Connect Team" }],
   icons: {
-    icon: "/logo.svg",
+    icon: "/image.png",
   },
   openGraph: {
     title: "Shifa-Connect | Gestion Médicale",

@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Shifa-Connect Logo](public/logo.svg)
+![Shifa-Connect Logo](public/image.png)
 
 **La plateforme "Mission Control" pour les médecins d'excellence en Algérie.**
 *Gestion de cabinet médical moderne, bilingue et ultra-performante.*
@@ -92,7 +92,7 @@ graph TD
 ## 🚀 Installation Rapide
 
 ### 1. Prérequis
-- Node.js 20+ ou Bun 1.1+
+- Node.js 20+ ou [Bun 1.1+](https://bun.sh/)
 - Une instance PostgreSQL (ou SQLite par défaut)
 
 ### 2. Setup
@@ -101,19 +101,19 @@ graph TD
 git clone https://github.com/votre-org/shifa-connect.git
 
 # Installer les dépendances
-bun install
+npm install  # ou bun install
 
 # Configurer l'environnement
 cp .env.local.example .env.local
 
 # Initialiser la base de données
-bunx prisma db push
-bunx prisma db seed
+npx prisma db push
+npx prisma db seed
 ```
 
 ### 3. Lancement
 ```bash
-bun run dev
+npm run dev
 ```
 
 ---

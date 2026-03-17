@@ -81,9 +81,9 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
       <Card className="w-full max-w-md shadow-lg border-primary/10">
         <CardHeader className="space-y-1 text-center">
-          <div className="flex justify-center mb-4">
-            <div className="rounded-full bg-primary/10 p-3">
-              <Stethoscope className="h-8 w-8 text-primary" />
+          <div className="flex justify-center mb-6">
+            <div className="rounded-2xl bg-white p-2.5 shadow-md border border-slate-100 overflow-hidden group hover:scale-110 transition-transform duration-300">
+               <img src="/image.png" alt="Shifa logo" className="h-12 w-12 object-contain" />
             </div>
           </div>
           <CardTitle className="text-2xl font-bold text-slate-900">Shifa-Connect</CardTitle>

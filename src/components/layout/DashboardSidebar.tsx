@@ -66,8 +66,8 @@ export function DashboardSidebar() {
       {/* Logo Section */}
       <div className="flex flex-col items-center justify-center py-8 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-white p-2">
-            <Stethoscope className="h-6 w-6 text-[#1B4F72]" />
+          <div className="rounded-xl bg-white p-1.5 shadow-sm overflow-hidden">
+            <img src="/image.png" alt="Shifa logo" className="h-8 w-8 object-contain" />
           </div>
           {!isCollapsed && (
             <div className="flex flex-col">
