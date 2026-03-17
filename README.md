@@ -1,396 +1,146 @@
-# Shifa-Connect | الشفاء كونيكت
+# 🏥 Shifa-Connect | الشفاء كونيكت
 
 <div align="center">
 
 ![Shifa-Connect Logo](public/logo.svg)
 
-**Plateforme de gestion de cabinet médical pour médecins privés algériens**
+**La plateforme "Mission Control" pour les médecins d'excellence en Algérie.**
+*Gestion de cabinet médical moderne, bilingue et ultra-performante.*
 
-[![Next.js](https://img.shields.io/badge/Next.js-16.1-black?style=flat-square&logo=next.js)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
-[![Prisma](https://img.shields.io/badge/Prisma-6.0-2D3748?style=flat-square&logo=prisma)](https://www.prisma.io/)
-[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+[![Next.js](https://img.shields.io/badge/Next.js-15.0-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+[![Prisma](https://img.shields.io/badge/Prisma-6.0-2D3748?style=for-the-badge&logo=prisma)](https://www.prisma.io/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
 
-[演示 Demo](#-démonstration) • [ Fonctionnalités](#-fonctionnalités) • [Installation](#-installation) • [Déploiement](#-déploiement)
+[Démonstration](#-démonstration) • [Fonctionnalités](#-fonctionnalités) • [Architecture](#-architecture) • [Installation](#-installation) • [Contribution](#-contribution)
 
 </div>
 
 ---
 
-## 📋 Description
+## 📋 Aperçu
 
-**Shifa-Connect** est une solution SaaS complète de gestion de cabinet médical, conçue spécifiquement pour les médecins généralistes et spécialistes privés en Algérie. L'application offre une interface bilingue (Français/Arabe) et respecte les spécificités du système de santé algérien.
+**Shifa-Connect** est une solution SaaS de pointe conçue pour révolutionner la gestion des cabinets médicaux privés en Algérie. Alliant une esthétique "Mission Control" à une robustesse technique, elle permet aux praticiens de se concentrer sur l'essentiel : **le soin patient.**
 
-### 🎯 Public cible
-
-- Médecins généralistes
-- Médecins spécialistes (pédiatres, cardiologues, dermatologues, etc.)
-- Cabinets médicaux privés
-- Cliniques privées
-
-### 🌍 Particularités algériennes
-
-- **Devise** : Dinar Algérien (DZD)
-- **Format de date** : DD/MM/YYYY
-- **Wilayas** : Les 48 wilayas d'Algérie
-- **Carte Chifa** : Intégration du numéro de carte Chifa
-- **NIN** : Numéro d'Identification Nationale
-- **Bilinguisme** : Interface en français et arabe (RTL)
+### 🌟 Points forts
+- 🚀 **Performance Exceptionnelle** : Rendu hybride (SSR/ISR) avec Next.js 15.
+- 🌍 **Localisation Totale** : Support bilingue (FR/AR), gestion des 58 Wilayas, NIN, et Carte Chifa.
+- 🎨 **UI/UX Premium** : Interface dynamique, responsive et accessible, conçue pour un flux de travail sans friction.
+- 🔐 **Sécurité de Données** : Scoping de données par médecin et protection robuste des dossiers médicaux.
 
 ---
 
-## ✨ Fonctionnalités
+## 🏗 Architecture du Système
 
-### 👤 Gestion des Patients
-- Création et modification de dossiers patients
-- Informations bilingues (français/arabe)
-- Recherche avancée par nom, téléphone, numéro de dossier
-- Historique médical complet
-- Gestion des allergies et maladies chroniques
-- Numéro de carte Chifa et NIN
+```mermaid
+graph TD
+    subgraph Client
+        UI["Browser/Mobile"] --> |"Next.js Client Components"| FE["React / Tailwind"]
+    end
 
-### 🩺 Consultations
-- Création rapide de consultations
-- Signes vitaux (TA, température, pouls, poids, taille)
-- Motif de consultation bilingue
-- Diagnostic avec codes CIM-10
-- Notes d'examen
-- Plan de traitement
-- Suivi des paiements
+    subgraph Server
+        FE --> |"API Routes / Server Actions"| BE["Next.js Server Side"]
+        BE --> |"Prisma ORM"| DB[("PostgreSQL / SQLite")]
+        BE --> |"NextAuth.js"| Auth["Authentication Layer"]
+    end
 
-### 💊 Ordonnances
-- Génération d'ordonnances professionnelles
-- Médicaments avec posologie détaillée
-- Instructions en français et arabe
-- **Export PDF** avec en-tête personnalisé
-- Tampon et signature numériques
-- Historique des ordonnances
+    subgraph Services
+        Auth --> |"Session Management"| Session["Prisma Session Store"]
+        DB --> |"Cloud Storage"| Supa["Supabase Storage"]
+    end
 
-### 📅 Agenda / Rendez-vous
-- Calendrier interactif
-- Prise de rendez-vous rapide
-- Gestion des créneaux horaires
-- Durée de consultation configurable
-- Rappels (fonctionnalité à venir)
-- Vue journalière, hebdomadaire, mensuelle
+    style BE fill:#1B4F72,color:#fff
+    style DB fill:#148F77,color:#fff
+    style UI fill:#f39c12,color:#fff
+```
 
-### 📊 Tableau de bord
-- Statistiques en temps réel
-- Graphiques des consultations
-- Répartition par diagnostic
-- Derniers patients vus
-- Actions rapides
+---
 
-### ⚙️ Paramètres
-- Profil médecin complet
-- Informations du cabinet
-- Horaires d'ouverture
-- Tarif de consultation
-- **Tampon et signature** pour les PDF
-- Gestion des abonnements (à venir)
+## ✨ Fonctionnalités Clés
+
+| Module | Description |
+| :--- | :--- |
+| **📈 Dashboard** | Statistiques en temps réel, graphiques de consultations et monitoring d'activité. |
+| **👥 Patients** | Dossiers bilingues complets, antécédents, allergies et recherche intelligente. |
+| **🩺 Consultations** | Prise de notes structurée, paramètres vitaux (TA, IMC, Temp) et diagnostics CIM-10. |
+| **💊 Ordonnances** | Génération d'ordonnances professionnelles en PDF avec tampon numérique. |
+| **📅 Agenda** | Gestion fluide des rendez-vous avec vues multiples et suivi des statuts. |
 
 ---
 
 ## 🛠 Stack Technique
 
-| Catégorie | Technologie |
-|-----------|-------------|
-| **Framework** | Next.js 16 (App Router) |
-| **Langage** | TypeScript 5 |
-| **Styling** | Tailwind CSS 4 + shadcn/ui |
-| **Base de données** | Prisma ORM + SQLite (dev) / PostgreSQL (prod) |
-| **État** | Zustand + TanStack Query |
-| **Formulaires** | React Hook Form + Zod |
-| **Graphiques** | Recharts |
-| **Calendrier** | React Big Calendar |
-| **PDF** | @react-pdf/renderer |
-| **Icônes** | Lucide React |
-| **Notifications** | Sonner |
+### Core
+- **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
+- **Langage**: [TypeScript](https://www.typescriptlang.org/)
+- **Base de données**: [Prisma](https://www.prisma.io/) (PostgreSQL/SQLite)
+- **Authentification**: [NextAuth.js](https://next-auth.js.org/) & [Supabase](https://supabase.com/)
+
+### UI/UX
+- **Style**: [Tailwind CSS 4](https://tailwindcss.com/)
+- **Composants**: [shadcn/ui](https://ui.shadcn.com/)
+- **Icônes**: [Lucide React](https://lucide.dev/)
+- **Animations**: [Framer Motion](https://www.framer.com/motion/)
+
+### Outils
+- **Formulaires**: React Hook Form + Zod
+- **Graphiques**: Recharts
+- **PDF**: @react-pdf/renderer
 
 ---
 
-## 📦 Prérequis
+## 🚀 Installation Rapide
 
-- **Node.js** >= 20.0.0 ou **Bun** >= 1.0.0
-- **npm**, **yarn**, **pnpm** ou **bun**
-- Compte **Supabase** (pour la production)
-- Compte **Vercel** (pour le déploiement)
+### 1. Prérequis
+- Node.js 20+ ou Bun 1.1+
+- Une instance PostgreSQL (ou SQLite par défaut)
 
----
-
-## 🚀 Installation
-
-### 1. Cloner le projet
-
+### 2. Setup
 ```bash
-git clone https://github.com/votre-repo/shifa-connect.git
-cd shifa-connect
-```
+# Cloner le dépôt
+git clone https://github.com/votre-org/shifa-connect.git
 
-### 2. Installer les dépendances
-
-```bash
-# Avec npm
-npm install
-
-# Avec bun (recommandé)
+# Installer les dépendances
 bun install
-```
 
-### 3. Configuration de l'environnement
-
-```bash
-# Copier le fichier d'exemple
+# Configurer l'environnement
 cp .env.local.example .env.local
+
+# Initialiser la base de données
+bunx prisma db push
+bunx prisma db seed
 ```
 
-Éditez `.env.local` avec vos valeurs :
-
-```env
-# Base de données (SQLite pour le développement)
-DATABASE_URL="file:./db/custom.db"
-
-# Authentification
-NEXTAUTH_SECRET="votre-secret-de-32-caracteres-minimum"
-NEXTAUTH_URL="http://localhost:3000"
-
-# Application
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
-```
-
-### 4. Initialiser la base de données
-
-```bash
-# Générer le client Prisma
-bun run db:generate
-
-# Créer les tables
-bun run db:push
-
-# (Optionnel) Ouvrir Prisma Studio
-bun run db:studio
-```
-
-### 5. Lancer le serveur de développement
-
+### 3. Lancement
 ```bash
 bun run dev
 ```
-
-L'application sera disponible on [http://localhost:3000](http://localhost:3000)
-
----
-
-## 🗄️ Configuration Supabase (Production)
-
-### 1. Créer un projet Supabase
-
-1. Allez sur [supabase.com](https://supabase.com)
-2. Créez un nouveau projet
-3. Notez votre mot de passe de base de données
-
-### 2. Exécuter le script SQL
-
-Dans l'éditeur SQL de Supabase, exécutez le contenu de `prisma/schema.prisma` après l'avoir converti en SQL avec :
-
-```bash
-bunx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > supabase-init.sql
-```
-
-Ou utilisez Prisma directement :
-
-```bash
-# Générer une migration
-bunx prisma migrate dev --name init
-
-# Pousser vers Supabase (après configuration de DATABASE_URL)
-DATABASE_URL="postgresql://postgres:[PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres" bunx prisma db push
-```
-
-### 3. Récupérer les clés API
-
-Dans **Project Settings > API** :
-
-- **Project URL** → `NEXT_PUBLIC_SUPABASE_URL`
-- **anon public key** → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- **service_role key** → `SUPABASE_SERVICE_ROLE_KEY`
-
-### 4. Mettre à jour `.env.local`
-
-```env
-DATABASE_URL="postgresql://postgres:[PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres"
-NEXT_PUBLIC_SUPABASE_URL="https://[PROJECT-REF].supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-```
-
----
-
-## 🌐 Déploiement sur Vercel
-
-### Méthode 1 : Via l'interface Vercel
-
-1. **Connecter le repository**
-   - Allez sur [vercel.com](https://vercel.com)
-   - Cliquez sur "New Project"
-   - Importez votre repository GitHub/GitLab/Bitbucket
-
-2. **Configurer le projet**
-   - Framework Preset: **Next.js**
-   - Root Directory: `./`
-   - Build Command: `bun run build`
-   - Output Directory: `.next`
-
-3. **Ajouter les variables d'environnement**
-   
-   Dans **Settings > Environment Variables**, ajoutez :
-
-   ```
-   DATABASE_URL=postgresql://postgres:[PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres
-   NEXTAUTH_SECRET=votre-secret-production
-   NEXTAUTH_URL=https://votre-domaine.vercel.app
-   NEXT_PUBLIC_APP_URL=https://votre-domaine.vercel.app
-   NEXT_PUBLIC_SUPABASE_URL=https://[PROJECT-REF].supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIs...
-   SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIs...
-   ```
-
-4. **Déployer**
-   - Cliquez sur "Deploy"
-   - Attendez la fin du build
-
-### Méthode 2 : Via CLI
-
-```bash
-# Installer Vercel CLI
-npm i -g vercel
-
-# Se connecter
-vercel login
-
-# Déployer
-vercel --prod
-```
-
-### Configuration du domaine personnalisé
-
-1. Dans **Settings > Domains**
-2. Ajoutez votre domaine (ex: `shifa-connect.dz`)
-3. Configurez les DNS chez votre registrar
-
----
-
-## 📁 Structure du projet
-
-```
-shifa-connect/
-├── prisma/
-├── public/
-├── src/
-│   ├── app/
-│   ├── components/
-│   ├── hooks/
-│   ├── lib/
-│   └── types/
-├── .env.local.example
-├── vercel.json
-├── package.json
-└── README.md
-```
-
----
-
-## 🎨 Système de design
-
-### Couleurs
-
-| Nom | Hex | Usage |
-|-----|-----|-------|
-| Primary | `#1B4F72` | Bleu médical profond |
-| Secondary | `#148F77` | Vert sarcelle |
-| Accent | `#F39C12` | Ambre (alertes) |
-| Success | `#27AE60` | Succès |
-| Danger | `#E74C3C` | Erreur/Danger |
-
-### Typographie
-
-- **Principale** : Inter (sans-serif)
-- **Arabe** : Noto Sans Arabic
-
----
-
-## 🔐 Sécurité
-
-- Authentification par session avec NextAuth.js
-- Hashage des mots de passe avec bcrypt
-- Validation des entrées avec Zod
-- Protection CSRF intégrée
-- Headers de sécurité configurés
-
----
-
-## 📈 Roadmap
-
-### ✅ Version 1.0 (Actuelle)
-
-- [x] Gestion des patients
-- [x] Consultations
-- [x] Ordonnances avec PDF
-- [x] Agenda/Rendez-vous
-- [x] Tableau de bord
-- [x] Paramètres médecin
-- [x] Support bilingue (FR/AR)
-
-### 🚀 Version 2.0 (Planifiée)
-
-- [ ] Rappels SMS pour les rendez-vous
-- [ ] Certificats médicaux
-- [ ] Lettres de référencement
-- [ ] Gestion des documents médicaux
-- [ ] Statistiques avancées
-- [ ] Export des données
-
-### 🔮 Version 3.0 (Future)
-
-- [ ] Multi-utilisateurs (cliniques)
-- [ ] Application mobile
-- [ ] Intégration Chifa avancée
-- [ ] Paiement en ligne
-- [ ] Télémédecine
 
 ---
 
 ## 🤝 Contribution
 
-Les contributions sont les bienvenues ! Veuillez lire les guidelines de contribution avant de soumettre une PR.
+Nous encourageons les contributions ! Que ce soit pour signaler un bug, proposer une fonctionnalité ou améliorer la documentation :
 
-1. Fork le projet
-2. Créer une branche (`git checkout -b feature/AmazingFeature`)
-3. Commit (`git commit -m 'Add some AmazingFeature'`)
-4. Push (`git push origin feature/AmazingFeature`)
-5. Ouvrir une Pull Request
+1.  **Fork** le projet.
+2.  Créer une branche **Feature** (`git checkout -b feature/AmazingFeature`).
+3.  **Commit** vos changements (`git commit -m 'Add AmazingFeature'`).
+4.  **Push** sur la branche (`git push origin feature/AmazingFeature`).
+5.  Ouvrir une **Pull Request**.
 
 ---
 
 ## 📄 Licence
 
-Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
-
----
-
-## 📞 Support
-
-- **Email** : support@shifa-connect.dz
-- **Documentation** : [docs.shifa-connect.dz](https://docs.shifa-connect.dz)
-- **Issues** : [GitHub Issues](https://github.com/votre-repo/shifa-connect/issues)
+Distribué sous la licence **MIT**. Voir `LICENSE` pour plus d'informations.
 
 ---
 
 <div align="center">
 
-**Fait avec ❤️ pour les médecins algériens**
+**Conçu avec ❤️ pour moderniser la santé en Algérie.**
+**صمم بكل ❤️ لتحديث قطاع الصحة في الجزائر**
 
-**صنع بكل ❤️ للأطباء الجزائريين**
+[Documentation](https://docs.shifa-connect.dz) • [Signaler un bug](https://github.com/votre-org/shifa-connect/issues)
 
 </div>
