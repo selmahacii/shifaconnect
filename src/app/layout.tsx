@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   },
   description: "Plateforme de gestion de cabinet médical pour médecins généralistes algériens. Gérez vos patients, consultations, ordonnances et rendez-vous.",
   keywords: ["Shifa-Connect", "الشفاء كونيكت", "gestion médicale", "cabinet médical", "Algérie", "médecin généraliste", "ordonnance", "consultation"],
-  authors: [{ name: "Shifa-Connect Team" }],
+  authors: [{ name: "Selma Haci" }],
   icons: {
     icon: "/image.png",
   },

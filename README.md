@@ -4,33 +4,9 @@
 
 ![Shifa-Connect Logo](public/image.png)
 
-**La plateforme "Mission Control" pour les médecins d'excellence en Algérie.**
-*Gestion de cabinet médical moderne, bilingue et ultra-performante.*
-
-[![Next.js](https://img.shields.io/badge/Next.js-15.0-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
-[![Prisma](https://img.shields.io/badge/Prisma-6.0-2D3748?style=for-the-badge&logo=prisma)](https://www.prisma.io/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
-
-[Démonstration](#-démonstration) • [Fonctionnalités](#-fonctionnalités) • [Architecture](#-architecture) • [Installation](#-installation) • [Contribution](#-contribution)
-
 </div>
 
 ---
-
-## 📋 Aperçu
-
-**Shifa-Connect** est une solution SaaS de pointe conçue pour révolutionner la gestion des cabinets médicaux privés en Algérie. Alliant une esthétique "Mission Control" à une robustesse technique, elle permet aux praticiens de se concentrer sur l'essentiel : **le soin patient.**
-
-### 🌟 Points forts
-- 🚀 **Performance Exceptionnelle** : Rendu hybride (SSR/ISR) avec Next.js 15.
-- 🌍 **Localisation Totale** : Support bilingue (FR/AR), gestion des 58 Wilayas, NIN, et Carte Chifa.
-- 🎨 **UI/UX Premium** : Interface dynamique, responsive et accessible, conçue pour un flux de travail sans friction.
-- 🔐 **Sécurité de Données** : Scoping de données par médecin et protection robuste des dossiers médicaux.
-
----
-
-## 🏗 Architecture du Système
 
 ```mermaid
 graph TD
@@ -56,91 +32,89 @@ graph TD
 
 ---
 
-## ✨ Fonctionnalités Clés
+```mermaid
+graph LR
+    subgraph Dashboard
+        Stats["Stats Card"]
+        Activity["Recent Activity"]
+        Actions["Quick Actions"]
+        Revenue["Revenue Chart"]
+    end
 
-| Module | Description |
-| :--- | :--- |
-| **📈 Dashboard** | Statistiques en temps réel, graphiques de consultations et monitoring d'activité. |
-| **👥 Patients** | Dossiers bilingues complets, antécédents, allergies et recherche intelligente. |
-| **🩺 Consultations** | Prise de notes structurée, paramètres vitaux (TA, IMC, Temp) et diagnostics CIM-10. |
-| **💊 Ordonnances** | Génération d'ordonnances professionnelles en PDF avec tampon numérique. |
-| **📅 Agenda** | Gestion fluide des rendez-vous avec vues multiples et suivi des statuts. |
+    subgraph Patients
+        List["Patient List"]
+        Search["Advanced Search"]
+        Form["Patient Form"]
+        Detail["Dossier Médical"]
+    end
 
----
+    subgraph Consultations
+        Notes["Notes (FR/AR)"]
+        Vitals["BMI Calculation"]
+        Prescription["Ord-Generation"]
+    end
 
-## 🛠 Stack Technique
+    subgraph Auth
+        Register["Doctor Register"]
+        Login["Secure Login"]
+        RLS["Data Scoping"]
+    end
 
-### Core
-- **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
-- **Langage**: [TypeScript](https://www.typescriptlang.org/)
-- **Base de données**: [Prisma](https://www.prisma.io/) (PostgreSQL/SQLite)
-- **Authentification**: [NextAuth.js](https://next-auth.js.org/) & [Supabase](https://supabase.com/)
-
-### UI/UX
-- **Style**: [Tailwind CSS 4](https://tailwindcss.com/)
-- **Composants**: [shadcn/ui](https://ui.shadcn.com/)
-- **Icônes**: [Lucide React](https://lucide.dev/)
-- **Animations**: [Framer Motion](https://www.framer.com/motion/)
-
-### Outils
-- **Formulaires**: React Hook Form + Zod
-- **Graphiques**: Recharts
-- **PDF**: @react-pdf/renderer
-
----
-
-## 🚀 Installation Rapide
-
-### 1. Prérequis
-- Node.js 20+ ou [Bun 1.1+](https://bun.sh/)
-- Une instance PostgreSQL (ou SQLite par défaut)
-
-### 2. Setup
-```bash
-# Cloner le dépôt
-git clone https://github.com/votre-org/shifa-connect.git
-
-# Installer les dépendances
-npm install  # ou bun install
-
-# Configurer l'environnement
-cp .env.local.example .env.local
-
-# Initialiser la base de données
-npx prisma db push
-npx prisma db seed
-```
-
-### 3. Lancement
-```bash
-npm run dev
+    style Dashboard fill:#1B4F72,color:#fff
+    style Patients fill:#148F77,color:#fff
+    style Consultations fill:#f39c12,color:#fff
 ```
 
 ---
 
-## 🤝 Contribution
+```mermaid
+sequenceDiagram
+    participant Doctor
+    participant UI as UI Context (Next.js)
+    participant API as API Server
+    participant DB as Core Data
+    participant Storage as Cloud Storage
 
-Nous encourageons les contributions ! Que ce soit pour signaler un bug, proposer une fonctionnalité ou améliorer la documentation :
+    Doctor->>UI: Select Patient
+    UI->>API: GET Request
+    API->>DB: Query Patient
+    DB-->>API: Data
+    API-->>UI: UI Render
 
-1.  **Fork** le projet.
-2.  Créer une branche **Feature** (`git checkout -b feature/AmazingFeature`).
-3.  **Commit** vos changements (`git commit -m 'Add AmazingFeature'`).
-4.  **Push** sur la branche (`git push origin feature/AmazingFeature`).
-5.  Ouvrir une **Pull Request**.
+    Doctor->>UI: Consultation Data
+    UI->>UI: Auto-Calculation
+    UI->>API: POST Transaction
+    API->>DB: Commit Records
+    API->>Storage: File Transfer
+    DB-->>API: ACK
+    API-->>UI: State Update
+```
 
 ---
 
-## 📄 Licence
-
-Distribué sous la licence **MIT**. Voir `LICENSE` pour plus d'informations.
+```mermaid
+erDiagram
+    DOCTOR ||--o{ PATIENT : manages
+    DOCTOR ||--o{ CONSULTATION : performs
+    DOCTOR ||--o{ APPOINTMENT : reviews
+    PATIENT ||--o{ CONSULTATION : attends
+    PATIENT ||--o{ APPOINTMENT : requests
+    CONSULTATION ||--o| PRESCRIPTION : generates
+    PRESCRIPTION ||--o{ MEDICATION_ITEM : contains
+    PATIENT ||--o{ MEDICAL_DOCUMENT : owns
+```
 
 ---
 
-<div align="center">
-
-**Conçu avec ❤️ pour moderniser la santé en Algérie.**
-**صمم بكل ❤️ لتحديث قطاع الصحة في الجزائر**
-
-[Documentation](https://docs.shifa-connect.dz) • [Signaler un bug](https://github.com/votre-org/shifa-connect/issues)
-
-</div>
+```mermaid
+stateDiagram-v2
+    [*] --> Scheduled
+    Scheduled --> Confirmed
+    Scheduled --> Cancelled
+    Confirmed --> InProgress
+    Confirmed --> Cancelled
+    InProgress --> Completed
+    InProgress --> NoShow
+    Scheduled --> NoShow
+    [*] --> Cancelled
+```
